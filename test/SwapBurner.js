@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 const {expect} = require('chai')
-const {ethers, deployments, getNamedAccounts} = require('hardhat')
+const {ethers, getNamedAccounts} = require('hardhat')
 
 describe('Swap Burner', function () {
   before(async () => {
@@ -13,13 +13,14 @@ describe('Swap Burner', function () {
     this.MockToken = await ethers.getContractFactory('MockToken')
     this.MockUniswapRouter = await ethers.getContractFactory('MockUniswapRouter')
     this.SwapBurner = await ethers.getContractFactory('SwapBurner')
+    this.swapDeadline = '1704215473' //Tue Jan 02 2024 17:11:13 GMT+0000
   })
 
   beforeEach(async () => {
     this.UBI = await this.MockToken.deploy('UBI Token', 'UBI', '1000000000000')
     this.WETH = await this.MockToken.deploy('WRAPPED ETH', 'WETH', '1000000000000')
     this.uniswapRouter = await this.MockUniswapRouter.deploy(this.WETH.address, this.UBI.address, 2)
-    this.swapBurner = await this.SwapBurner.deploy(this.uniswapRouter.address, this.UBI.address)
+    this.swapBurner = await this.SwapBurner.deploy(this.uniswapRouter.address, this.UBI.address, this.swapDeadline)
   })
 
   it('Should have initialized correctly', async () => {
@@ -89,7 +90,7 @@ describe('Swap Burner', function () {
     const mockSwapFactor = await this.uniswapRouter.mulFactor()
     //WHEN
     const aliceInitialETHBalance = await ethers.provider.getBalance(this.alice.address)
-    await this.swapBurner.connect(this.alice).receiveSwapAndBurn(30000, {
+    await this.swapBurner.connect(this.alice).receiveSwapAndBurn({
       value: '200'
     })
     const finalAliceUBIBalance = await this.UBI.balanceOf(this.alice.address)
@@ -113,7 +114,7 @@ describe('Swap Burner', function () {
     await this.UBI.transfer(this.uniswapRouter.address, '1000')
     //WHEN THEN
     await expect(
-      this.swapBurner.connect(this.alice).receiveSwapAndBurn(30000, {
+      this.swapBurner.connect(this.alice).receiveSwapAndBurn({
         value: '200'
       })
     )
