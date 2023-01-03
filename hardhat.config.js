@@ -12,7 +12,7 @@ require('hardhat-contract-sizer')
 const testnetAdmin = '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92' // Account 1
 const testnetUser1 = '0x09394bf9046485B043E4476dED219b3D718E6A90' // Account 3
 const testnetUser2 = '0x9A669b35D0Fc83a3272A37aab7A3147c4dc5546b' // Account 4
-const testnetUser3 = '0x8E0496C9786f8271Bc3712c9e5F794A137c2Dc87' // Account 5
+const testnetUser3 = '0x449BED8c30d909eCaCda721FECE4A9cfC940aD08' // Account 5
 
 const config = {
   solidity: {
