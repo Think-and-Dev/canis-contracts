@@ -1,15 +1,31 @@
 const posters = {
-    "poster-en": {
-        "http": "https://bafybeieum2apfoazd2gankjtnjtlx772lwgdlh26qix3cwlhrob3wxuyf4.ipfs.nftstorage.link/poster-en.json",
-        "ipfs": "ipfs://bafybeieum2apfoazd2gankjtnjtlx772lwgdlh26qix3cwlhrob3wxuyf4/poster-en.json"
+    "dog1": {
+        "http": "https://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa.ipfs.nftstorage.link/dog1.json",
+        "ipfs": "ipfs://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa/dog1.json"
     },
-    "poster-es": {
-        "http": "https://bafybeieum2apfoazd2gankjtnjtlx772lwgdlh26qix3cwlhrob3wxuyf4.ipfs.nftstorage.link/poster-es.json",
-        "ipfs": "ipfs://bafybeieum2apfoazd2gankjtnjtlx772lwgdlh26qix3cwlhrob3wxuyf4/poster-es.json"
+    "dog2": {
+        "http": "https://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa.ipfs.nftstorage.link/dog2.json",
+        "ipfs": "ipfs://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa/dog2.json"
     },
-    "poster-pt": {
-        "http": "https://bafybeieum2apfoazd2gankjtnjtlx772lwgdlh26qix3cwlhrob3wxuyf4.ipfs.nftstorage.link/poster-pt.json",
-        "ipfs": "ipfs://bafybeieum2apfoazd2gankjtnjtlx772lwgdlh26qix3cwlhrob3wxuyf4/poster-pt.json"
+    "dog3": {
+        "http": "https://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa.ipfs.nftstorage.link/dog3.json",
+        "ipfs": "ipfs://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa/dog3.json"
+    },
+    "dog4": {
+        "http": "https://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa.ipfs.nftstorage.link/dog4.json",
+        "ipfs": "ipfs://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa/dog4.json"
+    },
+    "dog5": {
+        "http": "https://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa.ipfs.nftstorage.link/dog5.json",
+        "ipfs": "ipfs://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa/dog5.json"
+    },
+    "dog6": {
+        "http": "https://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa.ipfs.nftstorage.link/dog6.json",
+        "ipfs": "ipfs://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa/dog6.json"
+    },
+    "dog7": {
+        "http": "https://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa.ipfs.nftstorage.link/dog7.json",
+        "ipfs": "ipfs://bafybeidt5hzmg3d477hakdwd56wilqdkamqph6iwqsuxsc7taobn5ssmoa/dog7.json"
     }
 }
 
