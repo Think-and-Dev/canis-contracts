@@ -15,3 +15,6 @@ abis/
 *.car
 tasks.md
 test-results.xml
+
+#local deployments
+deployments/localhost
