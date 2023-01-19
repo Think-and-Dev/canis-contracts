@@ -1,10 +1,11 @@
 const { dim, green, cyan, chainName, displayResult, yellow } = require('../utils/utils')
 const config = require('../config')
+const { verifyContract } = require('../utils/verifyContracts')
 const version = 'v0.1.0'
 const contractName = 'Royalty'
 
 module.exports = async (hardhat) => {
-  const { getNamedAccounts, deployments, getChainId } = hardhat
+  const { getNamedAccounts, deployments, getChainId, network } = hardhat
   const { deploy } = deployments
   const { admin, deployer } = await getNamedAccounts()
 
@@ -37,6 +38,8 @@ module.exports = async (hardhat) => {
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
   green('Contract Deployments Complete!')
   dim('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+
+  await verifyContract(network, result, contractName, [royaltyReceiver])
 
   return true
 }

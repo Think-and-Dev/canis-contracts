@@ -3,9 +3,10 @@ const { dim, green, cyan, chainName, displayResult } = require('../utils/utils')
 const config = require('../config')
 const version = 'v0.1.0'
 const contractName = 'SwapBurner'
+const { verifyContract } = require('../utils/verifyContracts')
 
 module.exports = async (hardhat) => {
-  const { getNamedAccounts, deployments, getChainId } = hardhat
+  const { getNamedAccounts, deployments, getChainId, network } = hardhat
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
   const accounts = await getUnnamedAccounts()
@@ -27,9 +28,11 @@ module.exports = async (hardhat) => {
   dim(`network: ${chainName(chainId)} (${isTestEnvironment ? 'local' : 'remote'})`)
   dim(`deployer: ${deployer}`)
 
+  const constructorArguments = [uniswapRouter, ubiToken, swapDeadline]
+
   cyan(`\nDeploying ${contractName}...`)
   const SwapBurnerResult = await deploy(contractName, {
-    args: [uniswapRouter, ubiToken, swapDeadline],
+    args: constructorArguments,
     contract: contractName,
     from: deployer,
     skipIfAlreadyDeployed: false
@@ -40,6 +43,9 @@ module.exports = async (hardhat) => {
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
   green('Contract Deployments Complete!')
   dim('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+
+  await verifyContract(network, SwapBurnerResult, contractName, constructorArguments)
+
 
   return true
 }
