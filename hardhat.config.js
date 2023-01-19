@@ -55,7 +55,12 @@ const config = {
     },
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY,
+      avalanche: process.env.AVALANCHE_API_KEY,
+      avalancheFujiTestnet: process.env.AVALANCHE_API_KEY,
+    }
   },
   mocha: {
     timeout: 30000
