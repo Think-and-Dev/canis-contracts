@@ -21,6 +21,7 @@ describe('Canis NFT', function () {
     this.royaltyReceiver = signers[4]
     this.CanisNFT = await ethers.getContractFactory('CanisNFT')
     this.Royalty = await ethers.getContractFactory('Royalty')
+    this.maxClaim = config['CanisNFT'].maxClaim
   })
 
   beforeEach(async () => {
@@ -41,6 +42,7 @@ describe('Canis NFT', function () {
     const expectedEndGiftingIndex = this.config.endGiftingIndex
     const expectedContractUri = this.config.contractUri
     const expectedOwner = this.deployer
+    const expectedMaxClaim = this.maxClaim
 
     const salePrice = 1000
     const expectedRoyaltyAmount = salePrice * (expectedDefaultFeeNumerator / 10000)
@@ -54,6 +56,7 @@ describe('Canis NFT', function () {
     const endGiftingIndex = await this.canisNFT.endGiftingIndex()
     const contractUri = await this.canisNFT.contractURI()
     const owner = await this.canisNFT.owner()
+    const maxClaim = await this.canisNFT.maxClaim();
     //THEN
     expect(name).to.be.equal(expectedName)
     expect(symbol).to.be.equal(expectedSymbol)
@@ -64,6 +67,7 @@ describe('Canis NFT', function () {
     expect(endGiftingIndex).to.be.equal(expectedEndGiftingIndex)
     expect(contractUri).to.be.equal(expectedContractUri)
     expect(owner).to.be.equal(expectedOwner)
+    expect(maxClaim).to.be.equal(expectedMaxClaim)
   })
 
   it('Should not create contract if cap is zero', async () => {
@@ -82,6 +86,21 @@ describe('Canis NFT', function () {
     await expect(this.CanisNFT.deploy(cap, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, startGiftingIndex, endGiftingIndex, contractUri)).to.be.revertedWith(
       'NFTCapped: cap is 0'
     )
+  })
+
+  it('Should be able to set max claim', async () => {
+    //set up
+    const actualMaxClaim = this.maxClaim
+    const newMaxClaim = 1
+    await expect(this.canisNFT.setMaxClaim(newMaxClaim))
+      .to.emit(this.canisNFT, 'MaxClaimUpdated')
+      .withArgs(actualMaxClaim, newMaxClaim)
+    const maxClaim = await this.canisNFT.maxClaim()
+    expect(maxClaim).to.be.equal(newMaxClaim)
+  })
+
+  it('Should not be able to set max claim no-owner', async () => {
+    await expect(this.canisNFT.connect(this.bob).setMaxClaim(2)).to.be.revertedWith('Ownable: caller is not the owner')
   })
 
   it('Should be able to mint owner', async () => {
@@ -108,7 +127,20 @@ describe('Canis NFT', function () {
     await expect(this.canisNFT.connect(this.bob).tokenURI(2)).to.be.revertedWith('ERC721: invalid token ID')
   })
 
-  it('Should not claim if user has already one nft', async () => {
+  it.only('Should able to claim max claim is set as zero', async () => {
+    //GIVEN
+    await this.canisNFT.safeMint()
+    await this.canisNFT.connect(this.alice).claim();
+    const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
+    //WHEN //THEN
+    expect(aliceBalance).to.be.equal(1)
+  })
+
+  it('Should not claim if user has already max claim value', async () => {
+    //SET UP
+    await this.canisNFT.setMaxClaim(1)
+    const maxClaim = await this.canisNFT.maxClaim()
+    expect(maxClaim).to.be.equal(1)
     //GIVEN
     await this.canisNFT.safeMint()
     await this.canisNFT.connect(this.alice).claim();

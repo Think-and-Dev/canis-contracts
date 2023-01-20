@@ -16,6 +16,8 @@ contract CanisNFT is ERC721URIStorage, ERC2981, Ownable {
     uint256 public startGiftingIndex;
     /// @dev End index where gifting ends
     uint256 public endGiftingIndex;
+    /// @dev End index where gifting ends
+    uint256 public maxClaim = 0;
     /// @dev ContractUri
     string public contractUri;
     using Counters for Counters.Counter;
@@ -41,6 +43,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, Ownable {
     event Gifted(address indexed to, uint256 tokenId);
     event Claimed(address indexed to, uint256 tokenId);
     event ContractURIUpdated(string indexed contractUri);
+    event MaxClaimUpdated(uint256 oldMax, uint256 newMax);
 
     /// @notice Init contract
     /// @param cap_ Max amount of NFTs to be minted. Cannot change
@@ -142,6 +145,15 @@ contract CanisNFT is ERC721URIStorage, ERC2981, Ownable {
         emit TokenRoyaltyReseted(tokenId);
     }
 
+    /// @notice Modify a max claim by address
+    /// @param max number of new max claim
+    function setMaxClaim(uint256 max) external onlyOwner {
+        require(max != 0, "CANISNFT: MAX MUST BE GREATER THAN ZERO");
+        uint256 oldMax = maxClaim;
+        maxClaim = max;
+        emit MaxClaimUpdated(oldMax, maxClaim);
+    }
+
     /********** INTERFACE ***********/
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC2981) returns (bool) {
@@ -184,7 +196,10 @@ contract CanisNFT is ERC721URIStorage, ERC2981, Ownable {
     /// @notice Claim an NFT
     /// @dev Function that users has to call to get an NFT
     function claim() external {
-        require(balanceOf(msg.sender) == 0, "CANISNFT: OWNER CANNOT HAVE MORE THAN ONE NFT");
+        require(
+            balanceOf(msg.sender) == 0 || balanceOf(msg.sender) < maxClaim,
+            "CANISNFT: OWNER CANNOT HAVE MORE THAN ONE NFT"
+        );
         uint256 tokenId = _gift(msg.sender);
         emit Claimed(msg.sender, tokenId);
     }

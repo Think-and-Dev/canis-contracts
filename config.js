@@ -27,6 +27,7 @@ const config = {
             endGiftingIndex: 2,
             contractUri: ""
         },
+        maxClaim: 0
     },
     Royalty: {
         5: {
