@@ -2,9 +2,10 @@ const { dim, green, cyan, chainName, displayResult } = require('../utils/utils')
 const version = 'v0.1.0'
 const contractName = 'CanisNFT'
 const config = require('../config')
+const { verifyContract } = require('../utils/verifyContracts')
 
 module.exports = async (hardhat) => {
-  const { getNamedAccounts, deployments, getChainId } = hardhat
+  const { getNamedAccounts, deployments, getChainId, network } = hardhat
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
@@ -29,10 +30,11 @@ module.exports = async (hardhat) => {
 
   dim(`network: ${chainName(chainId)} (${isTestEnvironment ? 'local' : 'remote'})`)
   dim(`deployer: ${deployer}`)
+  const constructorArguments = [cap, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, startGiftingIndex, endGiftingIndex, contractUri]
 
   cyan(`\nDeploying ${contractName}...`)
   const CanisNFTResult = await deploy(contractName, {
-    args: [cap, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, startGiftingIndex, endGiftingIndex, contractUri],
+    args: constructorArguments,
     contract: contractName,
     from: deployer,
     skipIfAlreadyDeployed: false
@@ -43,6 +45,7 @@ module.exports = async (hardhat) => {
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
   green('Contract Deployments Complete!')
   dim('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+  await verifyContract(network, CanisNFTResult, contractName, constructorArguments)
 
   return true
 }
