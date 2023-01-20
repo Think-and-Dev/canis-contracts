@@ -127,6 +127,15 @@ describe('Canis NFT', function () {
     await expect(this.canisNFT.connect(this.bob).tokenURI(2)).to.be.revertedWith('ERC721: invalid token ID')
   })
 
+  it.only('Should able to claim max claim is set as zero', async () => {
+    //GIVEN
+    await this.canisNFT.safeMint()
+    await this.canisNFT.connect(this.alice).claim();
+    const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
+    //WHEN //THEN
+    expect(aliceBalance).to.be.equal(1)
+  })
+
   it('Should not claim if user has already max claim value', async () => {
     //SET UP
     await this.canisNFT.setMaxClaim(1)
