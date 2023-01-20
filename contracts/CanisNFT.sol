@@ -17,7 +17,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, Ownable {
     /// @dev End index where gifting ends
     uint256 public endGiftingIndex;
     /// @dev End index where gifting ends
-    uint256 public maxClaim = 3;
+    uint256 public maxClaim = 0;
     /// @dev ContractUri
     string public contractUri;
     using Counters for Counters.Counter;
@@ -196,7 +196,10 @@ contract CanisNFT is ERC721URIStorage, ERC2981, Ownable {
     /// @notice Claim an NFT
     /// @dev Function that users has to call to get an NFT
     function claim() external {
-        require(balanceOf(msg.sender) < maxClaim, "CANISNFT: OWNER CANNOT HAVE MORE THAN ONE NFT");
+        require(
+            balanceOf(msg.sender) == 0 || balanceOf(msg.sender) < maxClaim,
+            "CANISNFT: OWNER CANNOT HAVE MORE THAN ONE NFT"
+        );
         uint256 tokenId = _gift(msg.sender);
         emit Claimed(msg.sender, tokenId);
     }
