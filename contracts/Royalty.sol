@@ -1,53 +1,54 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "./PaymentSplitter.sol";
 
 /// @title Canis Royalty
 /// @author Think and Dev
-contract Royalty is Ownable {
-    /// @dev address of the Royalty beneficiary
-    address public royaltyReceiver;
+contract Royalty is Ownable, PaymentSplitter {
+    event PayeeRemove(address account, uint256 shares);
 
-    event Initialized(address indexed royaltyReceiver);
-    event RoyaltyReceiverUpdated(address indexed royaltyReceiver);
-    event RoyaltyReceived(address indexed sender, uint256 indexed amount);
-    event ShareoutExecuted(uint256 indexed amount);
+    /**
+     * @notice Init contract
+     * @dev Creates an instance of `PaymentSplitter` where each account in `payees` is assigned the number of shares at
+     * the matching position in the `shares` array.
+     * All addresses in `payees` must be non-zero. Both arrays must have the same non-zero length, and there must be no
+     * duplicates in `payees`.
+     * @param payees addresses of payees
+     * @param shares values of shares
+     */
+    constructor(address[] memory payees, uint256[] memory shares) PaymentSplitter(payees, shares) {}
 
-    /// @notice Init contract
-    /// @param _royaltyReceiver address of royaltyReceiver
-    constructor(address _royaltyReceiver) {
-        royaltyReceiver = _royaltyReceiver;
-        emit Initialized(royaltyReceiver);
+    /**
+     * @dev Remove a payee to the contract.
+     * @param indexPayee The index of payee to remove it.
+     * @param account The address of the payee to remove.
+     */
+    function removePayee(uint256 indexPayee, address account) external onlyOwner {
+        require(account != address(0), "Royalty: account is the zero address");
+        require(_shares[account] != 0, "Royalty: account not has shares");
+        require(indexPayee < _payees.length, "Royalty: indexPayee not exist in payees");
+        require(_payees[indexPayee] == account, "Royalty: account is not the same as account in the index");
+
+        //delete moving the last element to not leave a gap
+        _payees[indexPayee] = _payees[_payees.length - 1];
+        _payees.pop();
+        //delete mapping
+        uint256 oldShare = _shares[account];
+        delete _shares[account];
+        _totalShares = _totalShares - oldShare;
+
+        emit PayeeRemove(account, oldShare);
     }
 
-    /// @notice Modify royalty receiver
-    /// @param _royaltyReceiver address of royaltyReceiver
-    function setRoyaltyReceiver(address _royaltyReceiver) external onlyOwner {
-        royaltyReceiver = _royaltyReceiver;
-        emit RoyaltyReceiverUpdated(royaltyReceiver);
-    }
-
-    /// @notice Get contractBalance
-    /// @return balance of the contract in native currency
-    function getBalance() public view returns (uint256) {
-        return address(this).balance;
-    }
-
-    /// @notice Send funds to Royalty receiver
-    function shareout() public onlyOwner {
-        require(address(this).balance > 0, "There is not available founds to transfer");
-        uint256 balance = address(this).balance;
-        (bool sent, ) = royaltyReceiver.call{value: balance}("");
-        require(sent, "Failed to send Ether");
-        emit ShareoutExecuted(balance);
-    }
-
-    receive() external payable {
-        emit RoyaltyReceived(msg.sender, msg.value);
+    /**
+     * @dev Add a new payee to the contract.
+     * @param account The address of the payee to add.
+     * @param shares The number of shares owned by the payee.
+     */
+    function addPayee(address account, uint256 shares) external onlyOwner {
+        _addPayee(account, shares);
     }
 }
