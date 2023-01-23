@@ -31,13 +31,19 @@ const config = {
     },
     Royalty: {
         5: {
-            royaltyReceiver: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92'
+            royaltyReceiver: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92',
+            percentageReceiver: 60,
+            percentageUBI: 40,
         },
         43113: {
-            royaltyReceiver: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92'
+            royaltyReceiver: '0x48Ef3BDB04a636dafa080A4F96347D1A35Bfbf4e',
+            percentageReceiver: 60,
+            percentageUBI: 40,
         },
         31337: {
-            royaltyReceiver: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92'
+            royaltyReceiver: '0x48Ef3BDB04a636dafa080A4F96347D1A35Bfbf4e',
+            percentageReceiver: 60,
+            percentageUBI: 40,
         },
     },
     SwapBurner: {
