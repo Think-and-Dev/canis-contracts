@@ -69,7 +69,8 @@ const config = {
     path: './abis',
     runOnCompile: true,
     clear: true,
-    flat: true
+    flat: true,
+    except: ['PaymentSplitter']
   }
 }
 
