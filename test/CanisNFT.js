@@ -25,7 +25,7 @@ describe('Canis NFT', function () {
   })
 
   beforeEach(async () => {
-    await deployments.fixture(['Royalty', 'CanisNFT'])
+    await deployments.fixture(['Royalty', 'CanisNFT', 'SwapBurner'])
     this.canisNFT = await ethers.getContract('CanisNFT', this.deployer)
     //await ethers.getContract('Royalty', deployer)
     this.defaultRoyaltyReceiver = (await ethers.getContract('Royalty', this.deployer)).address
@@ -127,7 +127,7 @@ describe('Canis NFT', function () {
     await expect(this.canisNFT.connect(this.bob).tokenURI(2)).to.be.revertedWith('ERC721: invalid token ID')
   })
 
-  it.only('Should able to claim max claim is set as zero', async () => {
+  it('Should able to claim max claim is set as zero', async () => {
     //GIVEN
     await this.canisNFT.safeMint()
     await this.canisNFT.connect(this.alice).claim();

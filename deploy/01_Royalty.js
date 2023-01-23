@@ -1,4 +1,4 @@
-const { dim, green, cyan, chainName, displayResult, yellow } = require('../utils/utils')
+const { dim, green, cyan, chainName, displayResult } = require('../utils/utils')
 const config = require('../config')
 const { verifyContract } = require('../utils/verifyContracts')
 const version = 'v0.1.0'
@@ -11,12 +11,16 @@ module.exports = async (hardhat) => {
 
   const chainId = parseInt(await getChainId(), 10)
   const {
-    royaltyReceiver
-  } = config[contractName][chainId]
+    royaltyReceiver,
+    percentageReceiver,
+    percentageUBI
+  } = config['Royalty'][chainId]
+
+  const defaultSwapBurner = (await ethers.getContract('SwapBurner', this.deployer)).address
+
+  const constructorArguments = [[royaltyReceiver, defaultSwapBurner], [percentageReceiver, percentageUBI]]
 
   const isTestEnvironment = chainId === 31337 || chainId === 1337
-
-  const signer = await ethers.provider.getSigner(deployer)
 
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
   dim(`Blockchain Canis Contracts - Deploy ${contractName}`)
@@ -27,7 +31,7 @@ module.exports = async (hardhat) => {
 
   cyan(`\nDeploying ${contractName}...`)
   const result = await deploy(contractName, {
-    args: [royaltyReceiver],
+    args: constructorArguments,
     contract: contractName,
     from: deployer,
     skipIfAlreadyDeployed: false
@@ -39,7 +43,7 @@ module.exports = async (hardhat) => {
   green('Contract Deployments Complete!')
   dim('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
 
-  await verifyContract(network, result, contractName, [royaltyReceiver])
+  await verifyContract(network, result, contractName, constructorArguments)
 
   return true
 }
