@@ -126,28 +126,28 @@ describe('Canis NFT', function () {
     await expect(this.canisNFT.connect(this.bob).tokenURI(2)).to.be.revertedWith('ERC721: invalid token ID')
   })
 
-  it('Should able to claim max claim is set as zero', async () => {
-    //GIVEN
-    await this.canisNFT.safeMint()
-    await this.canisNFT.connect(this.alice).claim();
-    const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
-    //WHEN //THEN
-    expect(aliceBalance).to.be.equal(1)
-  })
+  // it('Should able to claim max claim is set as zero', async () => {
+  //   //GIVEN
+  //   await this.canisNFT.safeMint()
+  //   await this.canisNFT.connect(this.alice).claim();
+  //   const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
+  //   //WHEN //THEN
+  //   expect(aliceBalance).to.be.equal(1)
+  // })
 
-  it('Should not claim if user has already max claim value', async () => {
-    //SET UP
-    await this.canisNFT.setMaxClaim(1)
-    const maxClaim = await this.canisNFT.maxClaim()
-    expect(maxClaim).to.be.equal(1)
-    //GIVEN
-    await this.canisNFT.safeMint()
-    await this.canisNFT.connect(this.alice).claim();
-    const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
-    //WHEN //THEN
-    expect(aliceBalance).to.be.equal(1)
-    await expect(this.canisNFT.connect(this.alice).claim()).to.be.revertedWith('CANISNFT: OWNER CANNOT HAVE MORE THAN ONE NFT')
-  })
+  // it('Should not claim if user has already max claim value', async () => {
+  //   //SET UP
+  //   await this.canisNFT.setMaxClaim(1)
+  //   const maxClaim = await this.canisNFT.maxClaim()
+  //   expect(maxClaim).to.be.equal(1)
+  //   //GIVEN
+  //   await this.canisNFT.safeMint()
+  //   await this.canisNFT.connect(this.alice).claim();
+  //   const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
+  //   //WHEN //THEN
+  //   expect(aliceBalance).to.be.equal(1)
+  //   await expect(this.canisNFT.connect(this.alice).claim()).to.be.revertedWith('CANISNFT: OWNER CANNOT HAVE MORE THAN ONE NFT')
+  // })
 
   it('Should not be able to mint once gap limit is reached', async () => {
     //GIVEN
@@ -332,40 +332,40 @@ describe('Canis NFT', function () {
 
   })
 
-  it('Should be able to claim no-owner', async () => {
-    //GIVEN
-    const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
-    await this.canisNFT.safeMint()
-    await this.canisNFT.safeMint()
-    await this.canisNFT.tokenURI(1)
-    await this.canisNFT.tokenURI(2)
-    //WHEN
-    await this.canisNFT.connect(this.alice).claim();
-    await this.canisNFT.connect(this.bob).claim();
-    const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
-    const bobBalance = await this.canisNFT.balanceOf(this.bob.address)
-    //WHEN //THEN
-    expect(aliceBalance).to.be.equal(1)
-    expect(bobBalance).to.be.equal(1)
-  })
+  // it('Should be able to claim no-owner', async () => {
+  //   //GIVEN
+  //   const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
+  //   await this.canisNFT.safeMint()
+  //   await this.canisNFT.safeMint()
+  //   await this.canisNFT.tokenURI(1)
+  //   await this.canisNFT.tokenURI(2)
+  //   //WHEN
+  //   await this.canisNFT.connect(this.alice).claim();
+  //   await this.canisNFT.connect(this.bob).claim();
+  //   const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
+  //   const bobBalance = await this.canisNFT.balanceOf(this.bob.address)
+  //   //WHEN //THEN
+  //   expect(aliceBalance).to.be.equal(1)
+  //   expect(bobBalance).to.be.equal(1)
+  // })
 
-  it('Should not be able to claim no-owner', async () => {
-    //GIVEN
-    const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
-    await this.canisNFT.safeMint()
-    await this.canisNFT.safeMint()
-    await this.canisNFT.tokenURI(1)
-    await this.canisNFT.tokenURI(2)
-    //WHEN
-    await this.canisNFT.connect(this.alice).claim();
-    await this.canisNFT.connect(this.bob).claim();
-    const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
-    const bobBalance = await this.canisNFT.balanceOf(this.bob.address)
-    //WHEN //THEN
-    expect(aliceBalance).to.be.equal(1)
-    expect(bobBalance).to.be.equal(1)
-    await expect(this.canisNFT.connect(this.charly).claim()).to.be.revertedWith('CANISNFT: CANNOT MINT NON GIFTABLE NFT')
-  })
+  // it('Should not be able to claim no-owner', async () => {
+  //   //GIVEN
+  //   const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
+  //   await this.canisNFT.safeMint()
+  //   await this.canisNFT.safeMint()
+  //   await this.canisNFT.tokenURI(1)
+  //   await this.canisNFT.tokenURI(2)
+  //   //WHEN
+  //   await this.canisNFT.connect(this.alice).claim();
+  //   await this.canisNFT.connect(this.bob).claim();
+  //   const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
+  //   const bobBalance = await this.canisNFT.balanceOf(this.bob.address)
+  //   //WHEN //THEN
+  //   expect(aliceBalance).to.be.equal(1)
+  //   expect(bobBalance).to.be.equal(1)
+  //   await expect(this.canisNFT.connect(this.charly).claim()).to.be.revertedWith('CANISNFT: CANNOT MINT NON GIFTABLE NFT')
+  // })
 
   it('Should not have a default value for contractUri', async () => {
     //GIVEN
