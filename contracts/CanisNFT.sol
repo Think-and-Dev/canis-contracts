@@ -28,6 +28,8 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
     /// @dev Private counter to make internal security checks
     uint256 private tokenIdGiftedIndex;
 
+    //use it to transfer the nft
+    address public guardianDelivery;
     /**
      * @dev Minter rol
      */
@@ -85,8 +87,9 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
         tokenIdGiftedIndex = startGiftingIndex;
         contractUri = _contractUri;
         super._setDefaultRoyalty(defaultRoyaltyReceiver, defaultFeeNumerator);
-        super._setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        super._setupRole(MINTER_ROLE, msg.sender);
+        super._setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        super._setupRole(MINTER_ROLE, _msgSender());
+        guardianDelivery = _msgSender();
         emit Initialized(
             CAP,
             name,
@@ -196,7 +199,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
             "CANISNFT: CANNOT MINT NON GIFTABLE NFT"
         );
         super._approve(to, tokenIdGiftedIndex);
-        super.safeTransferFrom(_msgSender(), to, tokenIdGiftedIndex);
+        super.safeTransferFrom(guardianDelivery, to, tokenIdGiftedIndex);
         uint256 tokenId = tokenIdGiftedIndex;
         tokenIdGiftedIndex += 1;
         return tokenId;
@@ -317,5 +320,11 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
     function _encodeRequest(ISignatureMintERC721.MintRequest calldata _req) internal pure returns (bytes memory) {
         return abi.encode(TYPEHASH, _req.to, keccak256(bytes(_req.uri)), _req.tokenId);
+    }
+
+    /// @dev set new guardiar
+    function setGuardian(address newGuardian) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newGuardian != address(0), "CANISNFT: address new guardian delivery can not be 0");
+        guardianDelivery = newGuardian;
     }
 }
