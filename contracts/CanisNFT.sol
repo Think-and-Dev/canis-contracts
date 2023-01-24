@@ -325,6 +325,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
     /// @dev set new guardiar
     function setGuardian(address newGuardian) public onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newGuardian != address(0), "CANISNFT: address new guardian delivery can not be 0");
+        require(hasRole(DEFAULT_ADMIN_ROLE, newGuardian), "CANISNFT: new guardian delivery must have admin role");
         guardianDelivery = newGuardian;
     }
 }
