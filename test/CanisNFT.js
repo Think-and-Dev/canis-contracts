@@ -22,6 +22,8 @@ describe('Canis NFT', function () {
     this.CanisNFT = await ethers.getContractFactory('CanisNFT')
     this.Royalty = await ethers.getContractFactory('Royalty')
     this.maxClaim = config['CanisNFT'].maxClaim
+    this.DEFAULT_ADMIN_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000000';
+
   })
 
   beforeEach(async () => {
@@ -43,7 +45,6 @@ describe('Canis NFT', function () {
     const expectedContractUri = this.config.contractUri
     const expectedOwner = this.deployer
     const expectedMaxClaim = this.maxClaim
-
     const salePrice = 1000
     const expectedRoyaltyAmount = salePrice * (expectedDefaultFeeNumerator / 10000)
 
@@ -55,7 +56,6 @@ describe('Canis NFT', function () {
     const startGiftingIndex = await this.canisNFT.startGiftingIndex()
     const endGiftingIndex = await this.canisNFT.endGiftingIndex()
     const contractUri = await this.canisNFT.contractURI()
-    const owner = await this.canisNFT.owner()
     const maxClaim = await this.canisNFT.maxClaim();
     //THEN
     expect(name).to.be.equal(expectedName)
@@ -66,7 +66,7 @@ describe('Canis NFT', function () {
     expect(startGiftingIndex).to.be.equal(expectedStartGiftingIndex)
     expect(endGiftingIndex).to.be.equal(expectedEndGiftingIndex)
     expect(contractUri).to.be.equal(expectedContractUri)
-    expect(owner).to.be.equal(expectedOwner)
+    expect(true).to.be.equal(await this.canisNFT.hasRole(this.DEFAULT_ADMIN_ROLE, this.deployer))
     expect(maxClaim).to.be.equal(expectedMaxClaim)
   })
 
@@ -80,7 +80,6 @@ describe('Canis NFT', function () {
     const startGiftingIndex = this.config.startGiftingIndex
     const endGiftingIndex = this.config.endGiftingIndex
     const contractUri = this.config.contractUri
-    const expectedOwner = this.deployer
     //WHEN //THEN
 
     await expect(this.CanisNFT.deploy(cap, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, startGiftingIndex, endGiftingIndex, contractUri)).to.be.revertedWith(
@@ -100,7 +99,7 @@ describe('Canis NFT', function () {
   })
 
   it('Should not be able to set max claim no-owner', async () => {
-    await expect(this.canisNFT.connect(this.bob).setMaxClaim(2)).to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(this.canisNFT.connect(this.bob).setMaxClaim(2)).to.be.revertedWith(`AccessControl: account ${this.bob.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
   })
 
   it('Should be able to mint owner', async () => {
@@ -116,7 +115,7 @@ describe('Canis NFT', function () {
     //GIVEN
     const aliceInitialBalance = await this.canisNFT.balanceOf(this.alice.address)
     //WHEN
-    await expect(this.canisNFT.connect(this.alice).safeMint()).to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(this.canisNFT.connect(this.alice).safeMint()).to.be.revertedWith(`AccessControl: account ${this.alice.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
   })
 
   it('Should revert to get a not minted tokenUri', async () => {
@@ -159,18 +158,18 @@ describe('Canis NFT', function () {
     //WHEN //THEN
     await expect(this.canisNFT.safeMint()).to.be.revertedWith('NFTCAPPED: cap exceeded')
   })
-
-  it('Should be able to change owner', async () => {
-    //GIVEN
-    const currentOwner = await this.canisNFT.owner()
-    const newOwner = this.owner.address
-    //WHEN
-    await this.canisNFT.transferOwnership(newOwner)
-    const expectedNewOwner = await this.canisNFT.owner()
-    //THEN
-    expect(currentOwner).to.be.equal(this.deployer)
-    expect(newOwner).to.be.equal(expectedNewOwner)
-  })
+  //TODO: refact to access control
+  // it('Should be able to change owner', async () => {
+  //   //GIVEN
+  //   const currentOwner = await this.canisNFT.owner()
+  //   const newOwner = this.owner.address
+  //   //WHEN
+  //   await this.canisNFT.transferOwnership(newOwner)
+  //   const expectedNewOwner = await this.canisNFT.owner()
+  //   //THEN
+  //   expect(currentOwner).to.be.equal(this.deployer)
+  //   expect(newOwner).to.be.equal(expectedNewOwner)
+  // })
 
   it('Should set default token royalty', async () => {
     //GIVEN
@@ -294,7 +293,7 @@ describe('Canis NFT', function () {
     const tokenOneUri = "ipfs://hash1"
     await this.canisNFT.safeMint()
     //WHEN //THEN
-    await expect(this.canisNFT.connect(this.alice).setTokenURI(1, tokenOneUri)).to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(this.canisNFT.connect(this.alice).setTokenURI(1, tokenOneUri)).to.be.revertedWith(`AccessControl: account ${this.alice.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
   })
 
   it('Should be able to mint batch tokens owner', async () => {
@@ -310,7 +309,7 @@ describe('Canis NFT', function () {
 
   it('Should not be able to mint batch tokens no-owner', async () => {
     //GIVEN //WHEN //THEN
-    await expect(this.canisNFT.connect(this.alice).safeMintBatch(5)).to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(this.canisNFT.connect(this.alice).safeMintBatch(5)).to.be.revertedWith(`AccessControl: account ${this.alice.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
   })
 
   it('Should be able to set token uri batch owner', async () => {
@@ -407,7 +406,7 @@ describe('Canis NFT', function () {
     await this.canisNFT.tokenURI(1)
     await this.canisNFT.tokenURI(2)
     //WHEN //THEN
-    await expect(this.canisNFT.connect(this.charly).gift(this.alice.address)).to.be.revertedWith('Ownable: caller is not the owner')
+    await expect(this.canisNFT.connect(this.charly).gift(this.alice.address)).to.be.revertedWith(`AccessControl: account ${this.charly.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
   })
 
 })
