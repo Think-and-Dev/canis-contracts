@@ -28,8 +28,6 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
     /// @dev Private counter to make internal security checks
     uint256 private tokenIdGiftedIndex;
 
-    //use it to transfer the nft
-    address public guardianDelivery;
     /**
      * @dev Minter rol
      */
@@ -89,7 +87,6 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
         super._setDefaultRoyalty(defaultRoyaltyReceiver, defaultFeeNumerator);
         super._setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         super._setupRole(MINTER_ROLE, _msgSender());
-        guardianDelivery = _msgSender();
         emit Initialized(
             CAP,
             name,
@@ -199,7 +196,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
             "CANISNFT: CANNOT MINT NON GIFTABLE NFT"
         );
         super._approve(to, tokenIdGiftedIndex);
-        super.safeTransferFrom(guardianDelivery, to, tokenIdGiftedIndex);
+        super.safeTransferFrom(_msgSender(), to, tokenIdGiftedIndex);
         uint256 tokenId = tokenIdGiftedIndex;
         tokenIdGiftedIndex += 1;
         return tokenId;
@@ -212,16 +209,17 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
         emit Gifted(to, tokenId);
     }
 
-    /// @notice Claim an NFT
-    /// @dev Function that users has to call to get an NFT
-    function claim() external {
-        require(
-            balanceOf(msg.sender) == 0 || balanceOf(msg.sender) < maxClaim,
-            "CANISNFT: OWNER CANNOT HAVE MORE THAN ONE NFT"
-        );
-        uint256 tokenId = _gift(msg.sender);
-        emit Claimed(msg.sender, tokenId);
-    }
+    // HISTORY
+    // /// @notice Claim an NFT
+    // /// @dev Function that users has to call to get an NFT
+    // function claim() external {
+    //     require(
+    //         balanceOf(msg.sender) == 0 || balanceOf(msg.sender) < maxClaim,
+    //         "CANISNFT: OWNER CANNOT HAVE MORE THAN ONE NFT"
+    //     );
+    //     uint256 tokenId = _gift(msg.sender);
+    //     emit Claimed(msg.sender, tokenId);
+    // }
 
     /// @custom:notice The following function is override required by Solidity.
     function _burn(uint256 tokenId) internal override(ERC721URIStorage) {
@@ -273,6 +271,26 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
         emit ContractURIUpdated(contractUri);
     }
 
+    /// @notice Claim an nft by signature
+    /// @dev  Function that users has to call to get an NFT by signature
+    /// @param request request data signed to claim a nft
+    /// @param signature signature necesary for claim
+    function claim(ISignatureMintERC721.MintRequest calldata request, bytes calldata signature)
+        public
+        returns (uint256)
+    {
+        //validate request
+        address signer = _processRequest(request, signature);
+        // set token uri
+        super._setTokenURI(request.tokenId, request.uri);
+
+        super._approve(_msgSender(), request.tokenId);
+        super.safeTransferFrom(signer, _msgSender(), request.tokenId);
+
+        emit Claimed(_msgSender(), request.tokenId);
+        return request.tokenId;
+    }
+
     /// @dev Verifies that a mint request is signed by an authorized account.
     function verify(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
         public
@@ -295,15 +313,14 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
         returns (address signer)
     {
         bool success;
+        //validate signer
         (success, signer) = verify(_req, _signature);
 
         if (!success) {
             revert("CANISNFT: Invalid request");
         }
-
         require(_req.to != address(0), "CANISNFT: recipient undefined");
         require(_req.tokenId <= CAP, "CANISNFT: cap exceeded");
-        require(_req.tokenId <= _tokenIdCounter.current(), "CANISNFT: Invalid token ID");
 
         minted[_req.tokenId] = true;
     }
@@ -320,12 +337,5 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
     function _encodeRequest(ISignatureMintERC721.MintRequest calldata _req) internal pure returns (bytes memory) {
         return abi.encode(TYPEHASH, _req.to, keccak256(bytes(_req.uri)), _req.tokenId);
-    }
-
-    /// @dev set new guardiar
-    function setGuardian(address newGuardian) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(newGuardian != address(0), "CANISNFT: address new guardian delivery can not be 0");
-        require(hasRole(DEFAULT_ADMIN_ROLE, newGuardian), "CANISNFT: new guardian delivery must have admin role");
-        guardianDelivery = newGuardian;
     }
 }
