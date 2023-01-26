@@ -11,7 +11,7 @@ import "./interfaces/ISignatureMintERC721.sol";
 
 /// @title Canis NFT contract
 /// @author Think and Dev
-contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
+contract CanisNFT is ERC721URIStorage, ERC2981, AccessControl {
     /// @dev Max amount of NFTs to be minted
     uint256 public immutable CAP;
     /// @dev Start index of nfts which will be gifted
@@ -77,7 +77,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
         uint256 _startGiftingIndex,
         uint256 _endGiftingIndex,
         string memory _contractUri
-    ) ERC721(name, symbol) EIP712(name, "1") {
+    ) ERC721(name, symbol) {
         require(cap_ > 0, "NFTCapped: cap is 0");
         CAP = cap_;
         startGiftingIndex = _startGiftingIndex;
@@ -321,6 +321,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
         }
         require(_req.to != address(0), "CANISNFT: recipient undefined");
         require(_req.tokenId <= CAP, "CANISNFT: cap exceeded");
+        require(_req.tokenId <= _tokenIdCounter.current(), "CANISNFT: request token id cannot be greater than minted");
 
         minted[_req.tokenId] = true;
     }
@@ -331,11 +332,11 @@ contract CanisNFT is ERC721URIStorage, ERC2981, EIP712, AccessControl {
         view
         returns (address)
     {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
+        return keccak256(_encodeRequest(_req)).toEthSignedMessageHash().recover(_signature);
     }
 
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
     function _encodeRequest(ISignatureMintERC721.MintRequest calldata _req) internal pure returns (bytes memory) {
-        return abi.encode(TYPEHASH, _req.to, keccak256(bytes(_req.uri)), _req.tokenId);
+        return abi.encodePacked(_req.to, keccak256(bytes(_req.uri)), _req.tokenId);
     }
 }
