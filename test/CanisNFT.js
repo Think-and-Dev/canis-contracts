@@ -1,8 +1,10 @@
 /* eslint-disable no-undef */
 const { throws } = require('assert')
 const { expect } = require('chai')
-const { ethers, deployments, getNamedAccounts, getChainId } = require('hardhat')
-const config = require('../config')
+const { ethers, deployments, getNamedAccounts, getChainId, config } = require('hardhat')
+const proyectConfig = require('../config')
+const { keccak256 } = require('ethers/lib/utils');
+
 
 /**
  * By default, ContractFactory and Contract instances are connected to the first signer.
@@ -12,7 +14,7 @@ describe('Canis NFT', function () {
     const signers = await ethers.getSigners()
     const { deployer } = await getNamedAccounts()
     const chainId = parseInt(await getChainId(), 10)
-    this.config = config['CanisNFT'][chainId]
+    this.config = proyectConfig['CanisNFT'][chainId]
     this.deployer = deployer
     this.owner = signers[0]
     this.alice = signers[1]
@@ -21,7 +23,7 @@ describe('Canis NFT', function () {
     this.royaltyReceiver = signers[4]
     this.CanisNFT = await ethers.getContractFactory('CanisNFT')
     this.Royalty = await ethers.getContractFactory('Royalty')
-    this.maxClaim = config['CanisNFT'].maxClaim
+    this.maxClaim = proyectConfig['CanisNFT'].maxClaim
     this.DEFAULT_ADMIN_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
   })
@@ -407,6 +409,35 @@ describe('Canis NFT', function () {
     await this.canisNFT.tokenURI(2)
     //WHEN //THEN
     await expect(this.canisNFT.connect(this.charly).gift(this.alice.address)).to.be.revertedWith(`AccessControl: account ${this.charly.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
+  })
+
+  it('Should be able to claim', async () => {
+    //GIVEN
+    const payload = [
+      this.alice.address,
+      keccak256(Buffer.from('ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json')),
+      1,
+      31337
+    ]
+    const mintRequestPayload = {
+      to: this.alice.address,
+      uri: 'ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json',
+      tokenId: 1,
+      chainId: 31337
+    }
+    //mint nft
+    await this.canisNFT.safeMint()
+    //get wallet and sign
+    const accounts = config.networks.hardhat.accounts;
+    const wallet1 = ethers.Wallet.fromMnemonic(accounts.mnemonic, accounts.path + `/${0}`);
+    // const wallet = new ethers.Wallet(wallet1.privateKey);
+    const hashToken = Buffer.from(ethers.utils.solidityKeccak256(['address', 'bytes32', 'uint256', 'uint256'], payload).slice(2), 'hex')
+    const hashSig = await wallet1.signMessage(hashToken);
+    //WHEN
+    await this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig);
+    //THEN
+    const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
+    expect(aliceBalance).to.be.equal(1)
   })
 
 })
