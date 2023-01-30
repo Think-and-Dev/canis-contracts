@@ -28,6 +28,7 @@ interface ISignatureMintERC721 {
         address to;
         string uri;
         uint256 tokenId;
+        uint256 chainId;
     }
 
     /// @dev Emitted when tokens are minted.
