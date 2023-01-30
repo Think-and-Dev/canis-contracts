@@ -277,6 +277,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, AccessControl {
     /// @param signature signature necesary for claim
     function claim(ISignatureMintERC721.MintRequest calldata request, bytes calldata signature)
         public
+        payable
         returns (uint256)
     {
         //validate request
@@ -322,6 +323,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, AccessControl {
         require(_req.to != address(0), "CANISNFT: recipient undefined");
         require(_req.tokenId <= CAP, "CANISNFT: cap exceeded");
         require(_req.tokenId <= _tokenIdCounter.current(), "CANISNFT: request token id cannot be greater than minted");
+        require(_req.chainId == block.chainid, "CANISNFT: the chain id must be the same as the network");
 
         minted[_req.tokenId] = true;
     }
@@ -337,6 +339,6 @@ contract CanisNFT is ERC721URIStorage, ERC2981, AccessControl {
 
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
     function _encodeRequest(ISignatureMintERC721.MintRequest calldata _req) internal pure returns (bytes memory) {
-        return abi.encodePacked(_req.to, keccak256(bytes(_req.uri)), _req.tokenId);
+        return abi.encodePacked(_req.to, keccak256(bytes(_req.uri)), _req.tokenId, _req.chainId);
     }
 }
