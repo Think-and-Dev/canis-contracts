@@ -14,27 +14,35 @@ const networks = {
     chainId: 31337,
     url: 'http://127.0.0.1:8545',
     allowUnlimitedContractSize: true,
-    timeout: 1000 * 60
-  }
+    timeout: 1000 * 60,
+    blockGasLimit: 100000000429720
+  },
+  hardhat: {
+    chainId: 31337,
+    allowUnlimitedContractSize: true,
+    timeout: 1000 * 60,
+    blockGasLimit: 100000000429720
+  },
+
 }
 
-if (process.env.ALCHEMY_URL && process.env.FORK_ENABLED) {
-  networks.hardhat = {
-    allowUnlimitedContractSize: true,
-    chainId: 1,
-    forking: {
-      url: process.env.ALCHEMY_URL
-    },
-    accounts
-  }
-  if (process.env.FORK_BLOCK_NUMBER) {
-    networks.hardhat.forking.blockNumber = parseInt(process.env.FORK_BLOCK_NUMBER)
-  }
-} else {
-  networks.hardhat = {
-    allowUnlimitedContractSize: true
-  }
-}
+// if (process.env.ALCHEMY_URL && process.env.FORK_ENABLED) {
+//   networks.hardhat = {
+//     allowUnlimitedContractSize: true,
+//     chainId: 1,
+//     forking: {
+//       url: process.env.ALCHEMY_URL
+//     },
+//     accounts
+//   }
+//   if (process.env.FORK_BLOCK_NUMBER) {
+//     networks.hardhat.forking.blockNumber = parseInt(process.env.FORK_BLOCK_NUMBER)
+//   }
+// } else {
+//   networks.hardhat = {
+//     allowUnlimitedContractSize: true
+//   }
+// }
 
 if (process.env.HDWALLET_MNEMONIC || process.env.PRIVATE_KEY) {
   networks.mumbai = {
