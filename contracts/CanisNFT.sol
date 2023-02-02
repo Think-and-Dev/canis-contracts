@@ -206,7 +206,6 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
             "CANISNFT: CANNOT MINT NON GIFTABLE NFT"
         );
 
-        // super._approve(to, tokenIdGiftedIndex);
         _safeTransfer(address(this), to, tokenIdGiftedIndex, "");
         uint256 tokenId = tokenIdGiftedIndex;
         tokenIdGiftedIndex += 1;
