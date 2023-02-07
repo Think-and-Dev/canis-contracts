@@ -107,17 +107,28 @@ describe('Canis NFT', function () {
   it('Should be able to mint owner', async () => {
     //GIVEN
     const tokenId = 1
+    await this.canisNFT.safeLazyMint()
     //WHEN
-    await expect(this.canisNFT.safeMint())
+    await expect(this.canisNFT.safeMint(tokenId))
       .to.emit(this.canisNFT, 'Transfer')
       .withArgs(ethers.constants.AddressZero, this.canisNFT.address, tokenId)
   })
-
-  it('Should not be able to mint no-owner', async () => {
+  it('Should not be able to mint non-existent tokenId', async () => {
     //GIVEN
-    const aliceInitialBalance = await this.canisNFT.balanceOf(this.alice.address)
+    const tokenId = 3
+    await this.canisNFT.safeLazyMint()
     //WHEN
-    await expect(this.canisNFT.connect(this.alice).safeMint()).to.be.revertedWith(`AccessControl: account ${this.alice.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
+    await expect(this.canisNFT.safeMint(tokenId)).to.be.revertedWith(`NFTCAPPED: tokenId not available to minted`)
+  })
+
+  it('Should be able to mint no-owner', async () => {
+    //GIVEN
+    const tokenId = 1
+    await this.canisNFT.safeLazyMint()
+    //WHEN
+    await expect(this.canisNFT.connect(this.alice).safeMint(tokenId))
+      .to.emit(this.canisNFT, 'Transfer')
+      .withArgs(ethers.constants.AddressZero, this.canisNFT.address, tokenId)
   })
 
   it('Should revert to get a not minted tokenUri', async () => {
@@ -154,11 +165,8 @@ describe('Canis NFT', function () {
   it('Should not be able to mint once gap limit is reached', async () => {
     //GIVEN
     const cap = this.config.cap
-    for (let i = 0; i < cap; i++) {
-      await this.canisNFT.safeMint()
-    }
     //WHEN //THEN
-    await expect(this.canisNFT.safeMint()).to.be.revertedWith('NFTCAPPED: cap exceeded')
+    await expect(this.canisNFT.safeMint(cap + 1)).to.be.revertedWith('NFTCAPPED: cap exceeded')
   })
   //TODO: refact to access control
   // it('Should be able to change owner', async () => {
@@ -210,7 +218,9 @@ describe('Canis NFT', function () {
 
   it('Should be able to get token default royalty for minted token', async () => {
     //GIVEN
-    await this.canisNFT.safeMint()
+    const tokenId = 1
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(tokenId)
     const salePrice = 1000
     const expectedRoyaltyAmount = salePrice * (this.config.defaultFeeNumerator / 10000)
     //WHEN
@@ -280,8 +290,10 @@ describe('Canis NFT', function () {
     //GIVEN
     const tokenOneUri = "ipfs://hash1"
     const tokenTwoUri = "ipfs://hash2"
-    await this.canisNFT.safeMint()
-    await this.canisNFT.safeMint()
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(1)
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(2)
     //WHEN
     await this.canisNFT.setTokenURI(1, tokenOneUri)
     await this.canisNFT.setTokenURI(2, tokenTwoUri)
@@ -293,7 +305,8 @@ describe('Canis NFT', function () {
   it('Should not be able to set token uri no-owner', async () => {
     //GIVEN
     const tokenOneUri = "ipfs://hash1"
-    await this.canisNFT.safeMint()
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(1)
     //WHEN //THEN
     await expect(this.canisNFT.connect(this.alice).setTokenURI(1, tokenOneUri)).to.be.revertedWith(`AccessControl: account ${this.alice.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
   })
@@ -302,23 +315,27 @@ describe('Canis NFT', function () {
     //GIVEN
     const cap = this.config.cap
     //WHEN
-    await this.canisNFT.safeMintBatch(cap)
+    await this.canisNFT.safeLazyMintBatch(cap)
+    await this.canisNFT.safeMintBatch(1, cap)
+    // await
     const balance = await this.canisNFT.balanceOf(this.canisNFT.address)
     //THEN
     expect(balance).to.be.equal(cap)
-    await expect(this.canisNFT.safeMint()).to.be.revertedWith('NFTCAPPED: cap exceeded')
+    await expect(this.canisNFT.safeMint(cap + 1)).to.be.revertedWith('NFTCAPPED: cap exceeded')
   })
 
   it('Should not be able to mint batch tokens no-owner', async () => {
     //GIVEN //WHEN //THEN
-    await expect(this.canisNFT.connect(this.alice).safeMintBatch(5)).to.be.revertedWith(`AccessControl: account ${this.alice.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
+    await expect(this.canisNFT.connect(this.alice).safeMintBatch(1, 5)).to.be.revertedWith(`AccessControl: account ${this.alice.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
   })
 
   it('Should be able to set token uri batch owner', async () => {
     //GIVEN
     const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
-    await this.canisNFT.safeMint()
-    await this.canisNFT.safeMint()
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(1)
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(2)
     //WHEN
     const actualTokenUri1 = await this.canisNFT.tokenURI(1)
     const actualTokenUri2 = await this.canisNFT.tokenURI(2)
@@ -389,8 +406,10 @@ describe('Canis NFT', function () {
   it('Should be able to gift', async () => {
     //GIVEN
     const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
-    await this.canisNFT.safeMint()
-    await this.canisNFT.safeMint()
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(1)
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(2)
     await this.canisNFT.tokenURI(1)
     await this.canisNFT.tokenURI(2)
     //WHEN
@@ -403,8 +422,10 @@ describe('Canis NFT', function () {
   it('Should not be able to gift no-owner', async () => {
     //GIVEN
     const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
-    await this.canisNFT.safeMint()
-    await this.canisNFT.safeMint()
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(1)
+    await this.canisNFT.safeLazyMint()
+    await this.canisNFT.safeMint(2)
     await this.canisNFT.tokenURI(1)
     await this.canisNFT.tokenURI(2)
     //WHEN //THEN
@@ -426,7 +447,7 @@ describe('Canis NFT', function () {
       chainId: 31337
     }
     //mint nft
-    await this.canisNFT.safeMint()
+    await this.canisNFT.safeLazyMint()
     //get wallet and sign
     const accounts = config.networks.hardhat.accounts;
     const wallet1 = ethers.Wallet.fromMnemonic(accounts.mnemonic, accounts.path + `/${0}`);
@@ -439,5 +460,14 @@ describe('Canis NFT', function () {
     const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
     expect(aliceBalance).to.be.equal(1)
   })
+  // it.only('mint batch 3000', async () => {
+  //   const tokensToMint = 3000
+  //   //GIVEN
+  //   await this.canisNFT.safeMintBatch(tokensToMint, { gasLimit: 999408631 })
+  //   const scBalance = await this.canisNFT.balanceOf(this.canisNFT.address)
+  //   expect(scBalance).to.be.equal(tokensToMint)
+
+  //   //WHEN //THEN
+  // })
 
 })
