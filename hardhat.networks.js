@@ -17,12 +17,12 @@ const networks = {
     timeout: 1000 * 60,
     blockGasLimit: 100000000429720
   },
-  hardhat: {
-    chainId: 31337,
-    allowUnlimitedContractSize: true,
-    timeout: 1000 * 60,
-    blockGasLimit: 100000000429720
-  },
+  // hardhat: {
+  //   chainId: 31337,
+  //   allowUnlimitedContractSize: true,
+  //   timeout: 1000 * 60,
+  //   blockGasLimit: 100000000429720
+  // },
 
 }
 
