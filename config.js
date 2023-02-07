@@ -21,7 +21,7 @@ const config = {
             assetToMint: 3333
         },
         31337: {
-            cap: 11111, //to some test modify to 11111
+            cap: 10, //to some test modify to 11111
             name: "CanisNFT",
             symbol: "CNFT",
             defaultFeeNumerator: 1000,
