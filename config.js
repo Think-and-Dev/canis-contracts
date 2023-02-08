@@ -1,31 +1,34 @@
 const config = {
     CanisNFT: {
         5: {
-            cap: 5706,
+            cap: 11111,
             name: "CanisNFT",
             symbol: "CNFT",
             defaultFeeNumerator: 1000,
             startGiftingIndex: 1,
             endGiftingIndex: 150,
-            contractUri: ""
+            contractUri: "",
+            assetToMint: 3333
         },
         43113: {
-            cap: 5705,
+            cap: 11111,
             name: "CanisNFT",
             symbol: "CNFT",
             defaultFeeNumerator: 1000,
             startGiftingIndex: 1,
             endGiftingIndex: 150,
-            contractUri: ""
+            contractUri: "",
+            assetToMint: 3333
         },
         31337: {
-            cap: 10,
+            cap: 11111, //to some test modify to 11111
             name: "CanisNFT",
             symbol: "CNFT",
             defaultFeeNumerator: 1000,
             startGiftingIndex: 1,
             endGiftingIndex: 2,
-            contractUri: ""
+            contractUri: "",
+            assetToMint: 3333
         },
         maxClaim: 0
     },

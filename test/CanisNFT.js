@@ -106,11 +106,11 @@ describe('Canis NFT', function () {
 
   it('Should be able to mint owner', async () => {
     //GIVEN
-    const aliceInitialBalance = await this.canisNFT.balanceOf(this.alice.address)
+    const tokenId = 1
     //WHEN
     await expect(this.canisNFT.safeMint())
       .to.emit(this.canisNFT, 'Transfer')
-      .withArgs(ethers.constants.AddressZero, this.deployer, 1)
+      .withArgs(ethers.constants.AddressZero, this.canisNFT.address, tokenId)
   })
 
   it('Should not be able to mint no-owner', async () => {
@@ -303,7 +303,7 @@ describe('Canis NFT', function () {
     const cap = this.config.cap
     //WHEN
     await this.canisNFT.safeMintBatch(cap)
-    const balance = await this.canisNFT.balanceOf(this.deployer)
+    const balance = await this.canisNFT.balanceOf(this.canisNFT.address)
     //THEN
     expect(balance).to.be.equal(cap)
     await expect(this.canisNFT.safeMint()).to.be.revertedWith('NFTCAPPED: cap exceeded')
@@ -386,7 +386,7 @@ describe('Canis NFT', function () {
       .withArgs(contractUri)
   })
 
-  it('Should be able to gift owner', async () => {
+  it('Should be able to gift', async () => {
     //GIVEN
     const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
     await this.canisNFT.safeMint()
@@ -396,7 +396,7 @@ describe('Canis NFT', function () {
     //WHEN
     await this.canisNFT.gift(this.alice.address);
     const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
-    //THEN
+    // //THEN
     expect(aliceBalance).to.be.equal(1)
   })
 
@@ -434,7 +434,7 @@ describe('Canis NFT', function () {
     const hashToken = Buffer.from(ethers.utils.solidityKeccak256(['address', 'bytes32', 'uint256', 'uint256'], payload).slice(2), 'hex')
     const hashSig = await wallet1.signMessage(hashToken);
     //WHEN
-    await this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig);
+    await this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, { value: '100000000000000' })
     //THEN
     const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
     expect(aliceBalance).to.be.equal(1)

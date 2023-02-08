@@ -21,37 +21,19 @@ async function main() {
   const name = await this.canisNFT.name()
   const symbol = await this.canisNFT.symbol()
   const cap = await this.canisNFT.CAP()
-  const { receiver, royaltyAmount } = await this.canisNFT.royaltyInfo(1, 1000)
-  const startGiftingIndex = await this.canisNFT.startGiftingIndex()
-  const endGiftingIndex = await this.canisNFT.endGiftingIndex()
-  const contractUri = await this.canisNFT.contractURI()
-  const owner = await this.canisNFT.owner()
+  const assetToMint = myconfig.assetToMint
 
   yellow(`\nCurrent status...`)
 
   cyan(`name: ${name}`)
   cyan(`symbol: ${symbol}`)
   cyan(`cap: ${cap.toNumber()}`)
-  cyan(`receiver: ${receiver}`)
-  cyan(`royaltyAmount: ${royaltyAmount.toNumber()}`)
-  cyan(`startGiftingIndex: ${startGiftingIndex.toNumber()}`)
-  cyan(`endGiftingIndex: ${endGiftingIndex.toNumber()}`)
-  cyan(`contractUri: ${contractUri}`)
-  cyan(`owner: ${owner}`)
+  cyan(`asset to mint: ${assetToMint}`)
 
-  yellow(`\nsafeMintBatch: ${endGiftingIndex.toNumber()}`)
-  await canisNFT.safeMintBatch(endGiftingIndex.toNumber())
 
-  yellow(`\setTokenURI from tokenId 1 to ${endGiftingIndex.toNumber()}`)
-  let tokenUris = []
-
-  for (let i = 1; i <= endGiftingIndex.toNumber(); i = i + 3) {
-    tokenUris.push(posters["poster-en"].ipfs)
-    tokenUris.push(posters["poster-es"].ipfs)
-    tokenUris.push(posters["poster-pt"].ipfs)
-  }
-
-  await canisNFT.setTokenURIBatch(1, tokenUris)
+  yellow(`\nsafeMintBatch: ${assetToMint}`)
+  const mint = await canisNFT.safeMintBatch(assetToMint, { gasLimit: 999408631 })
+  // mint.wait()
 
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
   green('CanisNFT Contracts - Mint Batch Posters Complete!')

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -11,7 +12,7 @@ import "./interfaces/ISignatureMintERC721.sol";
 
 /// @title Canis NFT contract
 /// @author Think and Dev
-contract CanisNFT is ERC721URIStorage, ERC2981, AccessControl {
+contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     /// @dev Max amount of NFTs to be minted
     uint256 public immutable CAP;
     /// @dev Start index of nfts which will be gifted
@@ -170,6 +171,15 @@ contract CanisNFT is ERC721URIStorage, ERC2981, AccessControl {
         emit MaxClaimUpdated(oldMax, maxClaim);
     }
 
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) public override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+
     /********** INTERFACE ***********/
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC2981, AccessControl) returns (bool) {
@@ -182,7 +192,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, AccessControl {
         _tokenIdCounter.increment();
         uint256 newTokenId = _tokenIdCounter.current();
         require(newTokenId <= CAP, "NFTCAPPED: cap exceeded");
-        _safeMint(_msgSender(), newTokenId);
+        _safeMint(address(this), newTokenId);
         return newTokenId;
     }
 
@@ -195,8 +205,8 @@ contract CanisNFT is ERC721URIStorage, ERC2981, AccessControl {
             tokenIdGiftedIndex >= startGiftingIndex && tokenIdGiftedIndex <= endGiftingIndex,
             "CANISNFT: CANNOT MINT NON GIFTABLE NFT"
         );
-        super._approve(to, tokenIdGiftedIndex);
-        super.safeTransferFrom(_msgSender(), to, tokenIdGiftedIndex);
+
+        _safeTransfer(address(this), to, tokenIdGiftedIndex, "");
         uint256 tokenId = tokenIdGiftedIndex;
         tokenIdGiftedIndex += 1;
         return tokenId;
@@ -281,12 +291,11 @@ contract CanisNFT is ERC721URIStorage, ERC2981, AccessControl {
         returns (uint256)
     {
         //validate request
-        address signer = _processRequest(request, signature);
+        _processRequest(request, signature);
         // set token uri
         super._setTokenURI(request.tokenId, request.uri);
 
-        super._approve(_msgSender(), request.tokenId);
-        super.safeTransferFrom(signer, _msgSender(), request.tokenId);
+        _safeTransfer(address(this), _msgSender(), request.tokenId, "");
 
         emit Claimed(_msgSender(), request.tokenId);
         return request.tokenId;
