@@ -28,7 +28,7 @@ const config = {
             startGiftingIndex: 1,
             endGiftingIndex: 2,
             contractUri: "",
-            assetToMint: 3333
+            assetToMint: 10
         },
         maxClaim: 0
     },
