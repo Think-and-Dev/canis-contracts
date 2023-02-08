@@ -26,23 +26,23 @@ const networks = {
 
 }
 
-// if (process.env.ALCHEMY_URL && process.env.FORK_ENABLED) {
-//   networks.hardhat = {
-//     allowUnlimitedContractSize: true,
-//     chainId: 1,
-//     forking: {
-//       url: process.env.ALCHEMY_URL
-//     },
-//     accounts
-//   }
-//   if (process.env.FORK_BLOCK_NUMBER) {
-//     networks.hardhat.forking.blockNumber = parseInt(process.env.FORK_BLOCK_NUMBER)
-//   }
-// } else {
-//   networks.hardhat = {
-//     allowUnlimitedContractSize: true
-//   }
-// }
+if (process.env.ALCHEMY_URL && process.env.FORK_ENABLED) {
+  networks.hardhat = {
+    allowUnlimitedContractSize: true,
+    chainId: 1,
+    forking: {
+      url: process.env.ALCHEMY_URL
+    },
+    accounts
+  }
+  if (process.env.FORK_BLOCK_NUMBER) {
+    networks.hardhat.forking.blockNumber = parseInt(process.env.FORK_BLOCK_NUMBER)
+  }
+} else {
+  networks.hardhat = {
+    allowUnlimitedContractSize: true
+  }
+}
 
 if (process.env.HDWALLET_MNEMONIC || process.env.PRIVATE_KEY) {
   networks.mumbai = {
