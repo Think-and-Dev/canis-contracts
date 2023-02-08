@@ -187,7 +187,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
 
     /// @notice Mint NFT
     /// @return id of the new minted NFT
-    function safeMint(uint256 tokenID) public returns (uint256) {
+    function safeMint(uint256 tokenID) public onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         require(tokenID <= CAP, "NFTCAPPED: cap exceeded");
         require(availableToMint[tokenID] == true, "NFTCAPPED: tokenId not available to minted");
         _safeMint(address(this), tokenID);
@@ -314,8 +314,9 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     {
         //validate request
         _processRequest(request, signature);
-
-        safeMint(request.tokenId);
+        //mint nft
+        _safeMint(address(this), request.tokenId);
+        availableToMint[request.tokenId] == false;
         // set token uri
         super._setTokenURI(request.tokenId, request.uri);
 

@@ -121,14 +121,12 @@ describe('Canis NFT', function () {
     await expect(this.canisNFT.safeMint(tokenId)).to.be.revertedWith(`NFTCAPPED: tokenId not available to minted`)
   })
 
-  it('Should be able to mint no-owner', async () => {
+  it('Should not be able to mint no-owner', async () => {
     //GIVEN
     const tokenId = 1
     await this.canisNFT.safeLazyMint()
     //WHEN
-    await expect(this.canisNFT.connect(this.alice).safeMint(tokenId))
-      .to.emit(this.canisNFT, 'Transfer')
-      .withArgs(ethers.constants.AddressZero, this.canisNFT.address, tokenId)
+    await expect(this.canisNFT.connect(this.alice).safeMint(tokenId)).to.be.revertedWith(`AccessControl: account ${this.alice.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`)
   })
 
   it('Should revert to get a not minted tokenUri', async () => {
