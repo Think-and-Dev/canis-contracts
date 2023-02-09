@@ -21,14 +21,14 @@ const config = {
             assetToMint: 3333
         },
         31337: {
-            cap: 11111, //to some test modify to 11111
+            cap: 10, //to some test modify to 11111
             name: "CanisNFT",
             symbol: "CNFT",
             defaultFeeNumerator: 1000,
             startGiftingIndex: 1,
             endGiftingIndex: 2,
             contractUri: "",
-            assetToMint: 3333
+            assetToMint: 10
         },
         maxClaim: 0
     },

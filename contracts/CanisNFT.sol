@@ -38,8 +38,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
 
     bytes32 private constant TYPEHASH = keccak256("MintRequest(address to,string uri,uint256 tokenId)");
 
-    /// @dev Mapping from mint request tokenId => whether the mint request is processed.
-    mapping(uint256 => bool) private minted;
+    mapping(uint256 => bool) private availableToMint;
 
     event Initialized(
         uint256 cap,
@@ -188,12 +187,12 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
 
     /// @notice Mint NFT
     /// @return id of the new minted NFT
-    function safeMint() public onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
-        _tokenIdCounter.increment();
-        uint256 newTokenId = _tokenIdCounter.current();
-        require(newTokenId <= CAP, "NFTCAPPED: cap exceeded");
-        _safeMint(address(this), newTokenId);
-        return newTokenId;
+    function safeMint(uint256 tokenID) public onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+        require(tokenID <= CAP, "NFTCAPPED: cap exceeded");
+        require(availableToMint[tokenID] == true, "NFTCAPPED: tokenId not available to minted");
+        _safeMint(address(this), tokenID);
+        availableToMint[tokenID] == false;
+        return tokenID;
     }
 
     /// @notice Gift an NFT
@@ -256,9 +255,32 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     /// @notice Mint NFTs
     /// @param quantity amount of NFTs to be minted
     /// @return id of the next NFT to be minted
-    function safeMintBatch(uint256 quantity) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+    function safeMintBatch(uint256 index, uint256 quantity) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+        uint256 to = index + quantity;
+        for (index; index < to; index++) {
+            safeMint(index);
+        }
+        return _tokenIdCounter.current();
+    }
+
+    /// @notice Lazy Mint NFTs
+    /// @return id of the next NFT to be minted
+    function safeLazyMint() external onlyRole(MINTER_ROLE) returns (uint256) {
+        require(_tokenIdCounter.current() <= CAP, "NFTCAPPED: cap exceeded");
+        _tokenIdCounter.increment();
+        availableToMint[_tokenIdCounter.current()] = true;
+        return _tokenIdCounter.current();
+    }
+
+    /// @notice Laxy Batch Mint NFTs
+    /// @param quantity amount of NFTs to be minted
+    /// @return id of the next NFT to be minted
+    function safeLazyMintBatch(uint256 quantity) external onlyRole(MINTER_ROLE) returns (uint256) {
+        require(quantity <= CAP, "NFTCAPPED: cap exceeded");
         for (uint256 i = 0; i < quantity; i++) {
-            safeMint();
+            require(_tokenIdCounter.current() <= CAP, "NFTCAPPED: cap exceeded");
+            _tokenIdCounter.increment();
+            availableToMint[_tokenIdCounter.current()] = true;
         }
         return _tokenIdCounter.current();
     }
@@ -292,6 +314,9 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     {
         //validate request
         _processRequest(request, signature);
+        //mint nft
+        _safeMint(address(this), request.tokenId);
+        availableToMint[request.tokenId] == false;
         // set token uri
         super._setTokenURI(request.tokenId, request.uri);
 
@@ -308,7 +333,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
         returns (bool success, address signer)
     {
         signer = _recoverAddress(_req, _signature);
-        success = !minted[_req.tokenId] && _canSignMintRequest(signer);
+        success = availableToMint[_req.tokenId] && _canSignMintRequest(signer);
     }
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
@@ -333,8 +358,6 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
         require(_req.tokenId <= CAP, "CANISNFT: cap exceeded");
         require(_req.tokenId <= _tokenIdCounter.current(), "CANISNFT: request token id cannot be greater than minted");
         require(_req.chainId == block.chainid, "CANISNFT: the chain id must be the same as the network");
-
-        minted[_req.tokenId] = true;
     }
 
     /// @dev Returns the address of the signer of the mint request.
