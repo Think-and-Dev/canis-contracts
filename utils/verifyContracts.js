@@ -12,7 +12,6 @@ const verifyContract = async (
         deployResult.newlyDeployed &&
         deployResult.transactionHash
     ) {
-        console.log("VERIFICANDO!!2")
         const blocks = 5;
         const address = deployResult.implementation || deployResult.address;
         const taskArgs = { address };
