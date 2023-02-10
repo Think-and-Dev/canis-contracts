@@ -13,10 +13,6 @@ async function main() {
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
   dim(` CanisNFT Contracts - Lazy Mint Batch`)
   dim('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
-  /*
-    const feeData = await ethers.provider.getFeeData();
-    console.log(feeData)
-  */
   const name = await this.canisNFT.name()
   const symbol = await this.canisNFT.symbol()
   const cap = await this.canisNFT.CAP()
