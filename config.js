@@ -8,7 +8,7 @@ const config = {
             startGiftingIndex: 1,
             endGiftingIndex: 150,
             contractUri: "",
-            assetToMint: 3333
+            assetToMint: 10
         },
         43113: {
             cap: 11111,
@@ -18,7 +18,7 @@ const config = {
             startGiftingIndex: 1,
             endGiftingIndex: 150,
             contractUri: "",
-            assetToMint: 3333
+            assetToMint: 10
         },
         31337: {
             cap: 10, //to some test modify to 11111
