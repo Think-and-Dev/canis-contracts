@@ -246,56 +246,6 @@ describe('Canis NFT', function () {
     expect(royaltyAmount).to.be.equal(expectedRoyaltyAmount)
   })
 
-  it('Should be able to set custom royalty', async () => {
-    //GIVEN
-    const defaultRoyaltyReceiver = this.defaultRoyaltyReceiver
-    const defaultFeeNumerator = this.config.defaultFeeNumerator
-    const customRoyaltyReceiver = this.royaltyReceiver.address
-    const customFeeNumerator = 10
-    const salePrice = 1000
-    //WHEN
-    const {receiver: defaultReceiver, royaltyAmount: defaultRoyaltyAmount} = await this.canisNFT.royaltyInfo(
-      1,
-      salePrice
-    )
-    await this.canisNFT.setTokenRoyalty(2, customRoyaltyReceiver, customFeeNumerator)
-    const {receiver: customReceiver, royaltyAmount: customRoyalty} = await this.canisNFT.royaltyInfo(2, salePrice)
-    //THEN
-    expect(defaultReceiver).to.be.equal(defaultRoyaltyReceiver)
-    expect(defaultRoyaltyAmount).to.be.equal(salePrice * (defaultFeeNumerator / 10000))
-    expect(customReceiver).to.be.equal(customRoyaltyReceiver)
-    expect(customRoyalty).to.be.equal(salePrice * (customFeeNumerator / 10000))
-  })
-
-  it('Should be able to reset token royalty for a token', async () => {
-    //GIVEN
-    const salePrice = 1000
-    const initialFeeNumberator = 10
-    const updatedFeeNumberator = 1000
-
-    const {receiver: initialRoyaltyReceiver, royaltyAmount: initialRoyaltyAmount} = await this.canisNFT.royaltyInfo(
-      0,
-      initialFeeNumberator
-    )
-    await this.canisNFT.setTokenRoyalty(0, this.royaltyReceiver.address, initialFeeNumberator)
-    const {receiver: updatedRoyaltyReceiver, royaltyAmount: updatedRoyaltyAmount} = await this.canisNFT.royaltyInfo(
-      0,
-      updatedFeeNumberator
-    )
-    //WHEN
-    await this.canisNFT.resetTokenRoyalty(0)
-    const {receiver: finalRoyaltyReceiver, royaltyAmount: finalRoyaltyAmount} = await this.canisNFT.royaltyInfo(
-      0,
-      salePrice
-    )
-    //THEN
-    expect(initialRoyaltyReceiver).to.be.equal(this.defaultRoyaltyReceiver)
-    expect(initialRoyaltyAmount).to.be.equal(salePrice * (initialFeeNumberator / 10000))
-    expect(updatedRoyaltyReceiver).to.be.equal(this.royaltyReceiver.address)
-    expect(finalRoyaltyReceiver).to.be.equal(initialRoyaltyReceiver)
-    expect(finalRoyaltyAmount).to.be.equal(salePrice * (updatedFeeNumberator / 10000))
-  })
-
   it('Should have a default value for contractUri', async () => {
     //GIVEN
     const expectedContractUri = this.config.contractUri

@@ -44,8 +44,6 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         string contractUri
     );
     event DefaultRoyaltyUpdated(address indexed royaltyReceiver, uint96 feeNumerator);
-    event TokenRoyaltyUpdated(uint256 indexed tokenId, address indexed receiver, uint96 feeNumerator);
-    event TokenRoyaltyReseted(uint256 indexed tokenId);
     event Claimed(address indexed to, uint256 tokenId);
     event ContractURIUpdated(string indexed contractUri);
     event MaxClaimUpdated(uint256 oldMax, uint256 newMax);
@@ -94,28 +92,6 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     function setDefaultRoyalty(address receiver, uint96 feeNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         super._setDefaultRoyalty(receiver, feeNumerator);
         emit DefaultRoyaltyUpdated(receiver, feeNumerator);
-    }
-
-    /// @notice Modify a particular token royalty
-    /// @param tokenId Id of the NFT to be modified
-    /// @param receiver address of the royalty beneficiary
-    /// @param feeNumerator fees to be charged
-    function setTokenRoyalty(
-        uint256 tokenId,
-        address receiver,
-        uint96 feeNumerator
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(tokenId <= CAP, "CANISNFT: TOKEN ID DOES NOT EXIST");
-        super._setTokenRoyalty(tokenId, receiver, feeNumerator);
-        emit TokenRoyaltyUpdated(tokenId, receiver, feeNumerator);
-    }
-
-    /// @notice Reset token royalty to default one
-    /// @param tokenId Id of the NFT to be modified
-    function resetTokenRoyalty(uint256 tokenId) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(tokenId <= CAP, "CANISNFT: TOKEN ID DOES NOT EXIST");
-        super._resetTokenRoyalty(tokenId);
-        emit TokenRoyaltyReseted(tokenId);
     }
 
     /// @notice Modify a max claim by address
