@@ -106,6 +106,7 @@ describe('Canis NFT', function () {
     const actualUri = await this.canisNFT.tokenURI(tokenId)
     expect(actualUri).to.be.equal(tokenOneUri)
   })
+
   it('Should not be able to mint an existent token ', async () => {
     //GIVEN
     const tokenId = 1
@@ -119,6 +120,7 @@ describe('Canis NFT', function () {
       `NFTCAPPED: tokenId not available to minted`
     )
   })
+
   it('Should not be able to mint non-existent tokenId', async () => {
     //GIVEN
     const tokenId = 3
@@ -183,18 +185,18 @@ describe('Canis NFT', function () {
       'NFTCAPPED: cap exceeded'
     )
   })
-  //TODO: refact to access control
-  // it('Should be able to change owner', async () => {
-  //   //GIVEN
-  //   const currentOwner = await this.canisNFT.owner()
-  //   const newOwner = this.owner.address
-  //   //WHEN
-  //   await this.canisNFT.transferOwnership(newOwner)
-  //   const expectedNewOwner = await this.canisNFT.owner()
-  //   //THEN
-  //   expect(currentOwner).to.be.equal(this.deployer)
-  //   expect(newOwner).to.be.equal(expectedNewOwner)
-  // })
+
+  it('Should be able to change admin', async () => {
+    //GIVEN
+    const currentOwnerHasRole = await this.canisNFT.hasRole(this.DEFAULT_ADMIN_ROLE, this.deployer)
+    const newOwner = this.owner.address
+    //WHEN
+    await this.canisNFT.grantRole(this.DEFAULT_ADMIN_ROLE, newOwner)
+    const newOwnerHasRole = await this.canisNFT.hasRole(this.DEFAULT_ADMIN_ROLE, newOwner)
+    //THEN
+    expect(currentOwnerHasRole).to.be.true
+    expect(newOwnerHasRole).to.be.true
+  })
 
   it('Should set default token royalty', async () => {
     //GIVEN
