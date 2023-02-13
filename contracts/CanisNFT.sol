@@ -192,8 +192,8 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
     function safeMint(uint256 tokenID) public onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         require(tokenID <= CAP, "NFTCAPPED: cap exceeded");
         require(availableToMint[tokenID] == true, "NFTCAPPED: tokenId not available to minted");
+        availableToMint[tokenID] = false;
         _safeMint(address(this), tokenID);
-        availableToMint[tokenID] == false;
         return tokenID;
     }
 

@@ -113,6 +113,17 @@ describe('Canis NFT', function () {
       .to.emit(this.canisNFT, 'Transfer')
       .withArgs(ethers.constants.AddressZero, this.canisNFT.address, tokenId)
   })
+  it('Should not be able to mint an existent token ', async () => {
+    //GIVEN
+    const tokenId = 1
+    await this.canisNFT.safeLazyMint()
+    //WHEN
+    await expect(this.canisNFT.safeMint(tokenId))
+      .to.emit(this.canisNFT, 'Transfer')
+      .withArgs(ethers.constants.AddressZero, this.canisNFT.address, tokenId)
+    await expect(this.canisNFT.safeMint(tokenId))
+      .to.be.revertedWith(`NFTCAPPED: tokenId not available to minted`)
+  })
   it('Should not be able to mint non-existent tokenId', async () => {
     //GIVEN
     const tokenId = 3
@@ -457,6 +468,115 @@ describe('Canis NFT', function () {
     //THEN
     const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
     expect(aliceBalance).to.be.equal(1)
+  })
+  it('Should not be able to claim same tokenId', async () => {
+    //GIVEN
+    const payload = [
+      this.alice.address,
+      keccak256(Buffer.from('ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json')),
+      1,
+      31337
+    ]
+    const mintRequestPayload = {
+      to: this.alice.address,
+      uri: 'ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json',
+      tokenId: 1,
+      chainId: 31337
+    }
+    //mint nft
+    await this.canisNFT.safeLazyMint()
+    //get wallet and sign
+    const accounts = config.networks.hardhat.accounts;
+    const wallet1 = ethers.Wallet.fromMnemonic(accounts.mnemonic, accounts.path + `/${0}`);
+    // const wallet = new ethers.Wallet(wallet1.privateKey);
+    const hashToken = Buffer.from(ethers.utils.solidityKeccak256(['address', 'bytes32', 'uint256', 'uint256'], payload).slice(2), 'hex')
+    const hashSig = await wallet1.signMessage(hashToken);
+    //WHEN
+    await this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, { value: '100000000000000' })
+    //THEN
+    await expect(this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, { value: '100000000000000' }))
+      .to.be.revertedWith(`CANISNFT: Invalid request`)
+  })
+  it('Should not be able to claim different chainId', async () => {
+    //GIVEN
+    const payload = [
+      this.alice.address,
+      keccak256(Buffer.from('ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json')),
+      1,
+      5
+    ]
+    const mintRequestPayload = {
+      to: this.alice.address,
+      uri: 'ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json',
+      tokenId: 1,
+      chainId: 5
+    }
+    //mint nft
+    await this.canisNFT.safeLazyMint()
+    //get wallet and sign
+    const accounts = config.networks.hardhat.accounts;
+    const wallet1 = ethers.Wallet.fromMnemonic(accounts.mnemonic, accounts.path + `/${0}`);
+    // const wallet = new ethers.Wallet(wallet1.privateKey);
+    const hashToken = Buffer.from(ethers.utils.solidityKeccak256(['address', 'bytes32', 'uint256', 'uint256'], payload).slice(2), 'hex')
+    const hashSig = await wallet1.signMessage(hashToken);
+    //WHEN
+    //THEN
+    await expect(this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, { value: '100000000000000' }))
+      .to.be.revertedWith(`CANISNFT: the chain id must be the same as the network`)
+  })
+  it('Should not be able to claim signed by not role mint', async () => {
+    //GIVEN
+    const payload = [
+      this.alice.address,
+      keccak256(Buffer.from('ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json')),
+      1,
+      31337
+    ]
+    const mintRequestPayload = {
+      to: this.alice.address,
+      uri: 'ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json',
+      tokenId: 1,
+      chainId: 31337
+    }
+    //mint nft
+    await this.canisNFT.safeLazyMint()
+    //get wallet and sign
+    const accounts = config.networks.hardhat.accounts;
+    const wallet1 = ethers.Wallet.fromMnemonic(accounts.mnemonic, accounts.path + `/${2}`);
+    // const wallet = new ethers.Wallet(wallet1.privateKey);
+    const hashToken = Buffer.from(ethers.utils.solidityKeccak256(['address', 'bytes32', 'uint256', 'uint256'], payload).slice(2), 'hex')
+    const hashSig = await wallet1.signMessage(hashToken);
+    //WHEN
+    //THEN
+    await expect(this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, { value: '100000000000000' }))
+      .to.be.revertedWith(`CANISNFT: must have minter role to mint`)
+  })
+  it('Should not be able to claim not available tokenId', async () => {
+    //GIVEN
+    const payload = [
+      this.alice.address,
+      keccak256(Buffer.from('ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json')),
+      2,
+      31337
+    ]
+    const mintRequestPayload = {
+      to: this.alice.address,
+      uri: 'ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json',
+      tokenId: 2,
+      chainId: 31337
+    }
+    //mint nft
+    await this.canisNFT.safeLazyMint()
+    //get wallet and sign
+    const accounts = config.networks.hardhat.accounts;
+    const wallet1 = ethers.Wallet.fromMnemonic(accounts.mnemonic, accounts.path + `/${2}`);
+    // const wallet = new ethers.Wallet(wallet1.privateKey);
+    const hashToken = Buffer.from(ethers.utils.solidityKeccak256(['address', 'bytes32', 'uint256', 'uint256'], payload).slice(2), 'hex')
+    const hashSig = await wallet1.signMessage(hashToken);
+    //WHEN
+    //THEN
+    await expect(this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, { value: '100000000000000' }))
+      .to.be.revertedWith(`CANISNFT: Invalid request`)
   })
   // it.only('mint batch 3000', async () => {
   //   const tokensToMint = 3000
