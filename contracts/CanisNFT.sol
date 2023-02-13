@@ -164,7 +164,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
     /// @notice Modify a max claim by address
     /// @param max number of new max claim
     function setMaxClaim(uint256 max) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(max != 0, "CANISNFT: MAX MUST BE GREATER THAN ZERO");
+        require(max > 0 && max <= CAP, "CANISNFT: INVALID MAX CLAIM");
         uint256 oldMax = maxClaim;
         maxClaim = max;
         emit MaxClaimUpdated(oldMax, maxClaim);
@@ -328,12 +328,10 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
         //validate request
         _processRequest(request, signature);
         //mint nft
-        _safeMint(address(this), request.tokenId);
         availableToMint[request.tokenId] == false;
+        _safeMint(_msgSender(), request.tokenId);
         // set token uri
         super._setTokenURI(request.tokenId, request.uri);
-
-        _safeTransfer(address(this), _msgSender(), request.tokenId, "");
 
         emit Claimed(_msgSender(), request.tokenId);
         return request.tokenId;
