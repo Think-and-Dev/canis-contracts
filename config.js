@@ -46,18 +46,15 @@ const config = {
   SwapBurner: {
     5: {
       uniswapRouter: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92',
-      ubiToken: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92',
-      swapDeadline: 100
+      ubiToken: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92'
     },
     43113: {
       uniswapRouter: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92',
-      ubiToken: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92',
-      swapDeadline: 100
+      ubiToken: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92'
     },
     31337: {
       uniswapRouter: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92',
-      ubiToken: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92',
-      swapDeadline: 100
+      ubiToken: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92'
     }
   }
 }

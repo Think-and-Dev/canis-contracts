@@ -15,13 +15,10 @@ contract SwapBurner is Ownable {
     address public Uniswap;
     /// @dev address of the UBI token
     address public immutable UBI;
-    /// @dev deadline to make the swap in UniSwap
-    uint256 public swapDeadline;
 
-    event Initialized(address indexed uniswapRouter, address indexed ubiToken, uint256 swapDeadline);
+    event Initialized(address indexed uniswapRouter, address indexed ubiToken);
     event UniswapApproved(uint256 amount);
     event UniswapAllowanceUpdated(uint256 oldAmount, uint256 newAmount);
-    event SwapDeadLineUpdated(uint256 oldDeadline, uint256 newDeadline);
     event SwapAndBurn(address indexed sender, uint256 nativeAmount, uint256 UBIBurnedAmount);
 
     /**
@@ -37,19 +34,16 @@ contract SwapBurner is Ownable {
     /// @notice Init contract
     /// @param _uniswapRouter address of Uniswap Router
     /// @param _ubiToken address of UBI token
-    /// @param _swapDeadline deadline for swaps
     constructor(
         address _uniswapRouter,
-        address _ubiToken,
-        uint256 _swapDeadline
+        address _ubiToken
     )
         isValidAddress(_uniswapRouter, "Uniswap address can not be null")
         isValidAddress(_ubiToken, "UBI address can not be null")
     {
         Uniswap = _uniswapRouter;
         UBI = _ubiToken;
-        swapDeadline = _swapDeadline;
-        emit Initialized(Uniswap, UBI, swapDeadline);
+        emit Initialized(Uniswap, UBI);
     }
 
     /********** GETTERS ***********/
@@ -79,14 +73,6 @@ contract SwapBurner is Ownable {
         emit UniswapAllowanceUpdated(oldAllowance, amount);
     }
 
-    /// @notice Modifiy deadline for swaps in swapRouter
-    /// @param newDeadline new deadline for swaps
-    function setSwapDeadline(uint256 newDeadline) external onlyOwner {
-        uint256 oldDeadline = swapDeadline;
-        swapDeadline = newDeadline;
-        emit SwapDeadLineUpdated(oldDeadline, newDeadline);
-    }
-
     /********** INTERFACE ***********/
 
     /// @notice Given a value of ETH, know the amount of UBI it is equal to
@@ -112,7 +98,7 @@ contract SwapBurner is Ownable {
             ubiAmount,
             path,
             address(this),
-            swapDeadline
+            block.timestamp + 1
         );
         uint256 ubiFinalBalace = IUBI(UBI).balanceOf(address(this));
 

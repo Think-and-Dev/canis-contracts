@@ -13,14 +13,13 @@ describe('Swap Burner', function () {
     this.MockToken = await ethers.getContractFactory('MockToken')
     this.MockUniswapRouter = await ethers.getContractFactory('MockUniswapRouter')
     this.SwapBurner = await ethers.getContractFactory('SwapBurner')
-    this.swapDeadline = '1704215473' //Tue Jan 02 2024 17:11:13 GMT+0000
   })
 
   beforeEach(async () => {
     this.UBI = await this.MockToken.deploy('UBI Token', 'UBI', '1000000000000')
     this.WETH = await this.MockToken.deploy('WRAPPED ETH', 'WETH', '1000000000000')
     this.uniswapRouter = await this.MockUniswapRouter.deploy(this.WETH.address, this.UBI.address, 2)
-    this.swapBurner = await this.SwapBurner.deploy(this.uniswapRouter.address, this.UBI.address, this.swapDeadline)
+    this.swapBurner = await this.SwapBurner.deploy(this.uniswapRouter.address, this.UBI.address)
   })
 
   it('Should have initialized correctly', async () => {

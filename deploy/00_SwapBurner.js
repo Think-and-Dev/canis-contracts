@@ -11,7 +11,7 @@ module.exports = async (hardhat) => {
 
   const chainId = parseInt(await getChainId(), 10)
 
-  const {uniswapRouter, ubiToken, swapDeadline} = config[contractName][chainId]
+  const {uniswapRouter, ubiToken} = config[contractName][chainId]
 
   const isTestEnvironment = chainId === 31337 || chainId === 1337
 
@@ -22,7 +22,12 @@ module.exports = async (hardhat) => {
   dim(`network: ${chainName(chainId)} (${isTestEnvironment ? 'local' : 'remote'})`)
   dim(`deployer: ${deployer}`)
 
-  const constructorArguments = [uniswapRouter, ubiToken, swapDeadline]
+  // If avalanch we don't deploy the swap burner because UBI token does not exists in that network
+  if (!uniswapRouter || !ubiToken) {
+    dim(`Network ${chainName(chainId)} does not have UBI token, so swapBurner is not going to be deployed`)
+    return
+  }
+  const constructorArguments = [uniswapRouter, ubiToken]
 
   cyan(`\nDeploying ${contractName}...`)
   const SwapBurnerResult = await deploy(contractName, {
