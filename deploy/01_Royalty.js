@@ -1,24 +1,23 @@
-const { dim, green, cyan, chainName, displayResult } = require('../utils/utils')
+const {dim, green, cyan, chainName, displayResult} = require('../utils/utils')
 const config = require('../config')
-const { verifyContract } = require('../utils/verifyContracts')
+const {verifyContract} = require('../utils/verifyContracts')
 const version = 'v0.1.0'
 const contractName = 'Royalty'
 
 module.exports = async (hardhat) => {
-  const { getNamedAccounts, deployments, getChainId, network } = hardhat
-  const { deploy } = deployments
-  const { admin, deployer } = await getNamedAccounts()
+  const {getNamedAccounts, deployments, getChainId, network, ethers} = hardhat
+  const {deploy} = deployments
+  const {admin, deployer} = await getNamedAccounts()
 
   const chainId = parseInt(await getChainId(), 10)
-  const {
-    royaltyReceiver,
-    percentageReceiver,
-    percentageUBI
-  } = config['Royalty'][chainId]
+  const {royaltyReceiver, percentageReceiver, percentageUBI} = config['Royalty'][chainId]
 
   const defaultSwapBurner = (await ethers.getContract('SwapBurner', this.deployer)).address
 
-  const constructorArguments = [[royaltyReceiver, defaultSwapBurner], [percentageReceiver, percentageUBI]]
+  const constructorArguments = [
+    [royaltyReceiver, defaultSwapBurner],
+    [percentageReceiver, percentageUBI]
+  ]
 
   const isTestEnvironment = chainId === 31337 || chainId === 1337
 
