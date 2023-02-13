@@ -341,29 +341,20 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
     function verify(
         ISignatureMintERC721.MintRequest calldata _req,
         bytes calldata _signature
-    ) public view returns (bool success, address signer) {
+    ) internal view returns (address signer) {
         signer = _recoverAddress(_req, _signature);
-        success = availableToMint[_req.tokenId] && _canSignMintRequest(signer);
-    }
-
-    /// @dev Returns whether a given address is authorized to sign mint requests.
-    function _canSignMintRequest(address _signer) internal view returns (bool) {
-        require(hasRole(MINTER_ROLE, _signer), "CANISNFT: must have minter role to mint");
-        return true;
+        require(availableToMint[_req.tokenId], "CANISNFT: tokenId not available");
+        require(hasRole(MINTER_ROLE, signer), "CANISNFT: must have minter role to mint");
     }
 
     /// @dev Verifies a mint request and marks the request as minted.
     function _processRequest(
         ISignatureMintERC721.MintRequest calldata _req,
         bytes calldata _signature
-    ) internal returns (address signer) {
-        bool success;
+    ) internal view returns (address signer) {
         //validate signer
-        (success, signer) = verify(_req, _signature);
+        signer = verify(_req, _signature);
 
-        if (!success) {
-            revert("CANISNFT: Invalid request");
-        }
         require(_req.to != address(0), "CANISNFT: recipient undefined");
         require(_req.tokenId <= CAP, "CANISNFT: cap exceeded");
         require(_req.tokenId <= _tokenIdCounter.current(), "CANISNFT: request token id cannot be greater than minted");
@@ -374,7 +365,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
     function _recoverAddress(
         ISignatureMintERC721.MintRequest calldata _req,
         bytes calldata _signature
-    ) internal view returns (address) {
+    ) internal pure returns (address) {
         return keccak256(_encodeRequest(_req)).toEthSignedMessageHash().recover(_signature);
     }
 
