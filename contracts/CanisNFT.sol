@@ -15,8 +15,6 @@ import "./interfaces/ISignatureMintERC721.sol";
 contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl {
     /// @dev Max amount of NFTs to be minted
     uint256 public immutable CAP;
-    /// @dev Max amount to be claimed by an address
-    uint256 public maxClaim = 0;
     /// @dev ContractUri
     string public contractUri;
 
@@ -46,7 +44,6 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     event DefaultRoyaltyUpdated(address indexed royaltyReceiver, uint96 feeNumerator);
     event Claimed(address indexed to, uint256 tokenId);
     event ContractURIUpdated(string indexed contractUri);
-    event MaxClaimUpdated(uint256 oldMax, uint256 newMax);
 
     /// @notice Init contract
     /// @param cap_ Max amount of NFTs to be minted. Cannot change
@@ -94,14 +91,6 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         emit DefaultRoyaltyUpdated(receiver, feeNumerator);
     }
 
-    /// @notice Modify a max claim by address
-    /// @param max number of new max claim
-    function setMaxClaim(uint256 max) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(max > 0 && max <= CAP, "CANISNFT: INVALID MAX CLAIM");
-        uint256 oldMax = maxClaim;
-        maxClaim = max;
-        emit MaxClaimUpdated(oldMax, maxClaim);
-    }
 
     /********** INTERFACE ***********/
 
