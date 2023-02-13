@@ -3,7 +3,6 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -13,7 +12,7 @@ import "./interfaces/ISignatureMintERC721.sol";
 
 /// @title Canis NFT contract
 /// @author Think and Dev
-contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receiver, AccessControl {
+contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl {
     /// @dev Max amount of NFTs to be minted
     uint256 public immutable CAP;
     /// @dev Max amount to be claimed by an address
@@ -128,15 +127,6 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
         emit MaxClaimUpdated(oldMax, maxClaim);
     }
 
-    function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    ) public override returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-
     /********** INTERFACE ***********/
 
     function supportsInterface(
@@ -145,13 +135,21 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
         return super.supportsInterface(interfaceId);
     }
 
-    /// @notice Mint NFT
+    /// @notice Mint NFT initialized in lazyMint
     /// @return id of the new minted NFT
-    function safeMint(uint256 tokenID) public onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+    function safeMint(
+        address to,
+        uint256 tokenID,
+        string calldata uri
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         require(tokenID <= CAP, "NFTCAPPED: cap exceeded");
         require(availableToMint[tokenID] == true, "NFTCAPPED: tokenId not available to minted");
+        require(bytes(uri).length > 0, "CANISNFT: Empty URI");
+        //mint nft
         availableToMint[tokenID] = false;
-        _safeMint(address(this), tokenID);
+        _safeMint(to, tokenID);
+        // set token uri
+        super._setTokenURI(tokenID, uri);
         return tokenID;
     }
 
@@ -187,17 +185,6 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
     /// @param _tokenURI tokenURI
     function setTokenURI(uint256 tokenId, string memory _tokenURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
         super._setTokenURI(tokenId, _tokenURI);
-    }
-
-    /// @notice Mint NFTs
-    /// @param quantity amount of NFTs to be minted
-    /// @return id of the next NFT to be minted
-    function safeMintBatch(uint256 index, uint256 quantity) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
-        uint256 to = index + quantity;
-        for (index; index < to; index++) {
-            safeMint(index);
-        }
-        return _tokenIdCounter.current();
     }
 
     /// @notice Lazy Mint NFTs
