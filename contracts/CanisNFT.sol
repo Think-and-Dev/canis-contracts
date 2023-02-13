@@ -3,7 +3,6 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -13,11 +12,9 @@ import "./interfaces/ISignatureMintERC721.sol";
 
 /// @title Canis NFT contract
 /// @author Think and Dev
-contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receiver, AccessControl {
+contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl {
     /// @dev Max amount of NFTs to be minted
     uint256 public immutable CAP;
-    /// @dev Max amount to be claimed by an address
-    uint256 public maxClaim = 0;
     /// @dev ContractUri
     string public contractUri;
 
@@ -45,11 +42,8 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
         string contractUri
     );
     event DefaultRoyaltyUpdated(address indexed royaltyReceiver, uint96 feeNumerator);
-    event TokenRoyaltyUpdated(uint256 indexed tokenId, address indexed receiver, uint96 feeNumerator);
-    event TokenRoyaltyReseted(uint256 indexed tokenId);
     event Claimed(address indexed to, uint256 tokenId);
     event ContractURIUpdated(string indexed contractUri);
-    event MaxClaimUpdated(uint256 oldMax, uint256 newMax);
 
     /// @notice Init contract
     /// @param cap_ Max amount of NFTs to be minted. Cannot change
@@ -97,45 +91,6 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
         emit DefaultRoyaltyUpdated(receiver, feeNumerator);
     }
 
-    /// @notice Modify a particular token royalty
-    /// @param tokenId Id of the NFT to be modified
-    /// @param receiver address of the royalty beneficiary
-    /// @param feeNumerator fees to be charged
-    function setTokenRoyalty(
-        uint256 tokenId,
-        address receiver,
-        uint96 feeNumerator
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(tokenId <= CAP, "CANISNFT: TOKEN ID DOES NOT EXIST");
-        super._setTokenRoyalty(tokenId, receiver, feeNumerator);
-        emit TokenRoyaltyUpdated(tokenId, receiver, feeNumerator);
-    }
-
-    /// @notice Reset token royalty to default one
-    /// @param tokenId Id of the NFT to be modified
-    function resetTokenRoyalty(uint256 tokenId) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(tokenId <= CAP, "CANISNFT: TOKEN ID DOES NOT EXIST");
-        super._resetTokenRoyalty(tokenId);
-        emit TokenRoyaltyReseted(tokenId);
-    }
-
-    /// @notice Modify a max claim by address
-    /// @param max number of new max claim
-    function setMaxClaim(uint256 max) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(max > 0 && max <= CAP, "CANISNFT: INVALID MAX CLAIM");
-        uint256 oldMax = maxClaim;
-        maxClaim = max;
-        emit MaxClaimUpdated(oldMax, maxClaim);
-    }
-
-    function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    ) public override returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
 
     /********** INTERFACE ***********/
 
@@ -145,13 +100,21 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
         return super.supportsInterface(interfaceId);
     }
 
-    /// @notice Mint NFT
+    /// @notice Mint NFT initialized in lazyMint
     /// @return id of the new minted NFT
-    function safeMint(uint256 tokenID) public onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+    function safeMint(
+        address to,
+        uint256 tokenID,
+        string calldata uri
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         require(tokenID <= CAP, "NFTCAPPED: cap exceeded");
         require(availableToMint[tokenID] == true, "NFTCAPPED: tokenId not available to minted");
+        require(bytes(uri).length > 0, "CANISNFT: Empty URI");
+        //mint nft
         availableToMint[tokenID] = false;
-        _safeMint(address(this), tokenID);
+        _safeMint(to, tokenID);
+        // set token uri
+        super._setTokenURI(tokenID, uri);
         return tokenID;
     }
 
@@ -180,24 +143,6 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
     /// @notice openSea integration royalty. See https://docs.opensea.io/docs/contract-level-metadata
     function contractURI() public view returns (string memory) {
         return contractUri;
-    }
-
-    /// @notice Set URI for an NFT
-    /// @param tokenId id of the NFT to change URI
-    /// @param _tokenURI tokenURI
-    function setTokenURI(uint256 tokenId, string memory _tokenURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        super._setTokenURI(tokenId, _tokenURI);
-    }
-
-    /// @notice Mint NFTs
-    /// @param quantity amount of NFTs to be minted
-    /// @return id of the next NFT to be minted
-    function safeMintBatch(uint256 index, uint256 quantity) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
-        uint256 to = index + quantity;
-        for (index; index < to; index++) {
-            safeMint(index);
-        }
-        return _tokenIdCounter.current();
     }
 
     /// @notice Lazy Mint NFTs
@@ -271,6 +216,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
         require(_req.tokenId <= CAP, "CANISNFT: cap exceeded");
         require(_req.tokenId <= _tokenIdCounter.current(), "CANISNFT: request token id cannot be greater than minted");
         require(_req.chainId == block.chainid, "CANISNFT: the chain id must be the same as the network");
+        require(bytes(_req.uri).length > 0, "CANISNFT: Empty URI");
     }
 
     /// @dev Returns the address of the signer of the mint request.
