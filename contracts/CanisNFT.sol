@@ -328,7 +328,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receive
         //validate request
         _processRequest(request, signature);
         //mint nft
-        availableToMint[request.tokenId] == false;
+        availableToMint[request.tokenId] = false;
         _safeMint(_msgSender(), request.tokenId);
         // set token uri
         super._setTokenURI(request.tokenId, request.uri);
