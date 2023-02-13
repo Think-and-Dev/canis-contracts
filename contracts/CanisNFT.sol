@@ -227,6 +227,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         require(_req.tokenId <= CAP, "CANISNFT: cap exceeded");
         require(_req.tokenId <= _tokenIdCounter.current(), "CANISNFT: request token id cannot be greater than minted");
         require(_req.chainId == block.chainid, "CANISNFT: the chain id must be the same as the network");
+        require(bytes(_req.uri).length > 0, "CANISNFT: Empty URI");
     }
 
     /// @dev Returns the address of the signer of the mint request.
