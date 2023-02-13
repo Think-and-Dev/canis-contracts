@@ -159,10 +159,11 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     /// @notice Lazy Mint NFTs
     /// @return id of the next NFT to be minted
     function safeLazyMint() external onlyRole(MINTER_ROLE) returns (uint256) {
-        require(_tokenIdCounter.current() <= CAP, "NFTCAPPED: cap exceeded");
         _tokenIdCounter.increment();
-        availableToMint[_tokenIdCounter.current()] = true;
-        return _tokenIdCounter.current();
+        uint256 currentTokenId = _tokenIdCounter.current();
+        require(currentTokenId <= CAP, "NFTCAPPED: cap exceeded");
+        availableToMint[currentTokenId] = true;
+        return currentTokenId;
     }
 
     /// @notice Laxy Batch Mint NFTs
@@ -170,12 +171,14 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     /// @return id of the next NFT to be minted
     function safeLazyMintBatch(uint256 quantity) external onlyRole(MINTER_ROLE) returns (uint256) {
         require(quantity <= CAP, "NFTCAPPED: cap exceeded");
+        uint256 currentTokenId = _tokenIdCounter.current();
+        require(currentTokenId + quantity <= CAP, "NFTCAPPED: cap exceeded");
         for (uint256 i = 0; i < quantity; i++) {
-            require(_tokenIdCounter.current() <= CAP, "NFTCAPPED: cap exceeded");
             _tokenIdCounter.increment();
-            availableToMint[_tokenIdCounter.current()] = true;
+            currentTokenId = _tokenIdCounter.current();
+            availableToMint[currentTokenId] = true;
         }
-        return _tokenIdCounter.current();
+        return currentTokenId;
     }
 
     /// @notice Modify contractUri for NFT collection

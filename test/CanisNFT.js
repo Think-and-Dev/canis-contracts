@@ -186,6 +186,24 @@ describe('Canis NFT', function () {
     )
   })
 
+  it('Should not be able to safeLazyMint once CAP limit is reached', async () => {
+    //GIVEN
+    const cap = this.config.cap
+    for (let i = 0; i < cap; i++) {
+      await this.canisNFT.safeLazyMint()
+    }
+    //WHEN //THEN
+    await expect(this.canisNFT.safeLazyMint()).to.be.revertedWith('NFTCAPPED: cap exceeded')
+  })
+
+  it('Should not be able to safeLazyMintBatch once CAP limit is reached', async () => {
+    //GIVEN
+    const cap = this.config.cap
+    await this.canisNFT.safeLazyMintBatch(cap)
+    //WHEN //THEN
+    await expect(this.canisNFT.safeLazyMintBatch(1)).to.be.revertedWith('NFTCAPPED: cap exceeded')
+  })
+
   it('Should be able to change admin', async () => {
     //GIVEN
     const currentOwnerHasRole = await this.canisNFT.hasRole(this.DEFAULT_ADMIN_ROLE, this.deployer)
