@@ -1,23 +1,17 @@
-const { getUnnamedAccounts } = require('hardhat')
-const { dim, green, cyan, chainName, displayResult } = require('../utils/utils')
+const {dim, green, cyan, chainName, displayResult} = require('../utils/utils')
 const config = require('../config')
 const version = 'v0.1.0'
 const contractName = 'SwapBurner'
-const { verifyContract } = require('../utils/verifyContracts')
+const {verifyContract} = require('../utils/verifyContracts')
 
 module.exports = async (hardhat) => {
-  const { getNamedAccounts, deployments, getChainId, network } = hardhat
-  const { deploy } = deployments
-  const { deployer } = await getNamedAccounts()
-  const accounts = await getUnnamedAccounts()
+  const {getNamedAccounts, deployments, getChainId, network} = hardhat
+  const {deploy} = deployments
+  const {deployer} = await getNamedAccounts()
 
   const chainId = parseInt(await getChainId(), 10)
 
-  const {
-    uniswapRouter,
-    ubiToken,
-    swapDeadline
-  } = config[contractName][chainId]
+  const {uniswapRouter, ubiToken, swapDeadline} = config[contractName][chainId]
 
   const isTestEnvironment = chainId === 31337 || chainId === 1337
 
@@ -45,7 +39,6 @@ module.exports = async (hardhat) => {
   dim('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
 
   await verifyContract(network, SwapBurnerResult, contractName, constructorArguments)
-
 
   return true
 }
