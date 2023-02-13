@@ -180,13 +180,6 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         return contractUri;
     }
 
-    /// @notice Set URI for an NFT
-    /// @param tokenId id of the NFT to change URI
-    /// @param _tokenURI tokenURI
-    function setTokenURI(uint256 tokenId, string memory _tokenURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        super._setTokenURI(tokenId, _tokenURI);
-    }
-
     /// @notice Lazy Mint NFTs
     /// @return id of the next NFT to be minted
     function safeLazyMint() external onlyRole(MINTER_ROLE) returns (uint256) {

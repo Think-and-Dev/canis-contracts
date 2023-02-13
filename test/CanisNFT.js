@@ -305,33 +305,6 @@ describe('Canis NFT', function () {
     expect(value).to.be.equal(expectedContractUri)
   })
 
-  it('Should be able to set token uri owner', async () => {
-    //GIVEN
-    const tokenOneUri = 'ipfs://hash'
-    const tokenTwoUri = 'ipfs://hash2'
-    await this.canisNFT.safeLazyMint()
-    await this.canisNFT.safeMint(this.alice.address, 1, 'RandomHash1')
-    await this.canisNFT.safeLazyMint()
-    await this.canisNFT.safeMint(this.alice.address, 2, 'RandomHash2')
-    //WHEN
-    await this.canisNFT.setTokenURI(1, tokenOneUri)
-    await this.canisNFT.setTokenURI(2, tokenTwoUri)
-    //THEN
-    expect(tokenOneUri).to.be.equal(await this.canisNFT.tokenURI(1))
-    expect(tokenTwoUri).to.be.equal(await this.canisNFT.tokenURI(2))
-  })
-
-  it('Should not be able to set token uri no-owner', async () => {
-    //GIVEN
-    const tokenOneUri = 'ipfs://hash1'
-    await this.canisNFT.safeLazyMint()
-    await this.canisNFT.safeMint(this.alice.address, 1, tokenOneUri)
-    //WHEN //THEN
-    await expect(this.canisNFT.connect(this.alice).setTokenURI(1, tokenOneUri)).to.be.revertedWith(
-      `AccessControl: account ${this.alice.address.toLowerCase()} is missing role ${this.DEFAULT_ADMIN_ROLE}`
-    )
-  })
-
   // it('Should be able to claim no-owner', async () => {
   //   //GIVEN
   //   const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
