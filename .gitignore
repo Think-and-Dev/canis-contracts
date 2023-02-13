@@ -11,6 +11,7 @@ cache
 artifacts
 abis/
 
+.vscode
 .DS_Store
 *.car
 tasks.md

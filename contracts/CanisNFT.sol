@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
@@ -12,7 +13,7 @@ import "./interfaces/ISignatureMintERC721.sol";
 
 /// @title Canis NFT contract
 /// @author Think and Dev
-contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
+contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, IERC721Receiver, AccessControl {
     /// @dev Max amount of NFTs to be minted
     uint256 public immutable CAP;
     /// @dev Start index of nfts which will be gifted
@@ -79,6 +80,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
         string memory _contractUri
     ) ERC721(name, symbol) {
         require(cap_ > 0, "NFTCapped: cap is 0");
+        require(_startGiftingIndex <= _endGiftingIndex, "CanisNFT: start gift index bigger than end");
         CAP = cap_;
         startGiftingIndex = _startGiftingIndex;
         endGiftingIndex = _endGiftingIndex;
@@ -102,12 +104,10 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     /********** GETTERS ***********/
 
     /// @inheritdoc	IERC2981
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        public
-        view
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) public view override returns (address receiver, uint256 royaltyAmount) {
         require(tokenId <= CAP, "CANISNFT: TOKEN ID DOES NOT EXIST");
         return super.royaltyInfo(tokenId, salePrice);
     }
@@ -164,7 +164,7 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     /// @notice Modify a max claim by address
     /// @param max number of new max claim
     function setMaxClaim(uint256 max) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(max != 0, "CANISNFT: MAX MUST BE GREATER THAN ZERO");
+        require(max > 0 && max <= CAP, "CANISNFT: INVALID MAX CLAIM");
         uint256 oldMax = maxClaim;
         maxClaim = max;
         emit MaxClaimUpdated(oldMax, maxClaim);
@@ -181,7 +181,9 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
 
     /********** INTERFACE ***********/
 
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC2981, AccessControl) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721, ERC721Enumerable, ERC2981, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -231,12 +233,24 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     // }
 
     /// @custom:notice The following function is override required by Solidity.
-    function _burn(uint256 tokenId) internal override(ERC721URIStorage) {
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
     }
 
+    /**
+     * @dev See {ERC721-_beforeTokenTransfer}.
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 firstTokenId,
+        uint256 batchSize
+    ) internal virtual override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, firstTokenId, batchSize);
+    }
+
     /// @custom:notice The following function is override required by Solidity.
-    function tokenURI(uint256 tokenId) public view override(ERC721URIStorage) returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
         return super.tokenURI(tokenId);
     }
 
@@ -307,31 +321,27 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     /// @dev  Function that users has to call to get an NFT by signature
     /// @param request request data signed to claim a nft
     /// @param signature signature necesary for claim
-    function claim(ISignatureMintERC721.MintRequest calldata request, bytes calldata signature)
-        public
-        payable
-        returns (uint256)
-    {
+    function claim(
+        ISignatureMintERC721.MintRequest calldata request,
+        bytes calldata signature
+    ) public payable returns (uint256) {
         //validate request
         _processRequest(request, signature);
         //mint nft
-        _safeMint(address(this), request.tokenId);
-        availableToMint[request.tokenId] == false;
+        availableToMint[request.tokenId] = false;
+        _safeMint(_msgSender(), request.tokenId);
         // set token uri
         super._setTokenURI(request.tokenId, request.uri);
-
-        _safeTransfer(address(this), _msgSender(), request.tokenId, "");
 
         emit Claimed(_msgSender(), request.tokenId);
         return request.tokenId;
     }
 
     /// @dev Verifies that a mint request is signed by an authorized account.
-    function verify(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        returns (bool success, address signer)
-    {
+    function verify(
+        ISignatureMintERC721.MintRequest calldata _req,
+        bytes calldata _signature
+    ) public view returns (bool success, address signer) {
         signer = _recoverAddress(_req, _signature);
         success = availableToMint[_req.tokenId] && _canSignMintRequest(signer);
     }
@@ -343,10 +353,10 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     }
 
     /// @dev Verifies a mint request and marks the request as minted.
-    function _processRequest(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
-        internal
-        returns (address signer)
-    {
+    function _processRequest(
+        ISignatureMintERC721.MintRequest calldata _req,
+        bytes calldata _signature
+    ) internal returns (address signer) {
         bool success;
         //validate signer
         (success, signer) = verify(_req, _signature);
@@ -361,11 +371,10 @@ contract CanisNFT is ERC721URIStorage, ERC2981, IERC721Receiver, AccessControl {
     }
 
     /// @dev Returns the address of the signer of the mint request.
-    function _recoverAddress(ISignatureMintERC721.MintRequest calldata _req, bytes calldata _signature)
-        internal
-        view
-        returns (address)
-    {
+    function _recoverAddress(
+        ISignatureMintERC721.MintRequest calldata _req,
+        bytes calldata _signature
+    ) internal view returns (address) {
         return keccak256(_encodeRequest(_req)).toEthSignedMessageHash().recover(_signature);
     }
 
