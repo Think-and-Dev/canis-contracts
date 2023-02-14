@@ -39,12 +39,14 @@ contract MockUniswapRouter is Ownable {
     function swapETHForExactTokens(
         uint256 amountOut,
         address[] calldata path,
-        address to,
+        address,
         uint256 deadline
     ) external payable returns (uint256[] memory amounts) {
         require(IERC20(UBIToken).balanceOf(address(this)) > 0, "NO MORE UBIS LEFT TO GIVE");
+         require(deadline >= block.timestamp, "DEADLINE EXPIRED");
         IERC20(UBIToken).transfer(msg.sender, amountOut / mulFactor);
         (bool sent, ) = payable(msg.sender).call{value: (msg.value) - 10}("");
         require(sent, "Failed to send Native currency dust");
+        amounts = new uint256[](path.length);
     }
 }

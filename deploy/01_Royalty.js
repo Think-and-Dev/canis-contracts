@@ -12,7 +12,7 @@ module.exports = async (hardhat) => {
   const chainId = parseInt(await getChainId(), 10)
   const {royaltyReceiver, percentageReceiver, ubiReceiver, percentageUBI} = config[contractName][chainId]
 
-  const defaultUbiReceiver = ubiReceiver ? ubiReceiver : (await ethers.getContract('SwapBurner', this.deployer)).address
+  const defaultUbiReceiver = ubiReceiver ? ubiReceiver : (await ethers.getContract('SwapBurner')).address
 
   const constructorArguments = [
     [royaltyReceiver, defaultUbiReceiver],
@@ -32,8 +32,7 @@ module.exports = async (hardhat) => {
   const result = await deploy(contractName, {
     args: constructorArguments,
     contract: contractName,
-    from: deployer,
-    skipIfAlreadyDeployed: false
+    from: deployer
   })
 
   displayResult(contractName, result)

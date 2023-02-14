@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./PaymentSplitter.sol";
+import "./external/PaymentSplitter.sol";
 
 /// @title Canis Royalty
 /// @author Think and Dev
