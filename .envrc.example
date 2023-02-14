@@ -8,26 +8,11 @@ export INFURA_API_KEY=''
 export ETHERSCAN_API_KEY=''
 export AVALANCHE_API_KEY=
 
-# Used for verifying contracts on Binance
-export BSCSCAN_API_KEY=''
-
-# Used for verifying contracts on PolygonScan
-export POLYGONSCAN_API_KEY=''
-
 # Required for forking
 export ALCHEMY_URL=''
 
 # Block number from which to fork
 export FORK_BLOCK_NUMBER=''
 
-#required for mainnet governance forking testnets
-export PATH_TO_GOVERNANCE_REPO=''
-
 # Used to deploy to testnets
 export PRIVATE_KEY=''
-
-# Used to deploy contract
-export TOKEN_SUPPLY=''
-export TOKEN_URI='' 
-export NFT_NAME=''
-export NFT_SYMBOL='' 
