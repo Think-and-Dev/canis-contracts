@@ -1,7 +1,7 @@
-# Used to deploy to testnets
+# Used to deploy
 export HDWALLET_MNEMONIC=''
 
-# Used to deploy to testnets
+# Used to deploy
 export INFURA_API_KEY=''
 
 # Used for verifying contracts on Etherscan
@@ -14,5 +14,8 @@ export ALCHEMY_URL=''
 # Block number from which to fork
 export FORK_BLOCK_NUMBER=''
 
-# Used to deploy to testnets
+# Used to deploy
 export PRIVATE_KEY=''
+
+# Used to deploy
+export SALT=''
