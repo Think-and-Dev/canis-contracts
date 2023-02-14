@@ -6,8 +6,10 @@ module.exports = {
       _chainIdRpc: 1337
     },
     skipFiles: [
-      "external",
-      "test",
-      "comptroller"
+      "external/",
+      "test/",
+      "mock/",
+      "echidna/",
+      "interfaces/",
     ]
   };
