@@ -3,7 +3,7 @@ const {expect} = require('chai')
 const {ethers, deployments, getNamedAccounts, getChainId, config} = require('hardhat')
 const proyectConfig = require('../config')
 const {keccak256} = require('ethers/lib/utils')
-const {BigNumber} = ethers
+const {makeInterfaceId} = require('@openzeppelin/test-helpers')
 
 /**
  * By default, ContractFactory and Contract instances are connected to the first signer.
@@ -577,5 +577,46 @@ describe('Canis NFT', function () {
     await expect(
       this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: '100000000000000'})
     ).to.be.revertedWith(`CANISNFT: tokenId not available`)
+  })
+
+  it('all interfaces are reported as supported', async () => {
+    const INTERFACES = {
+      ERC165: ['supportsInterface(bytes4)'],
+      ERC721: [
+        'balanceOf(address)',
+        'ownerOf(uint256)',
+        'approve(address,uint256)',
+        'getApproved(uint256)',
+        'setApprovalForAll(address,bool)',
+        'isApprovedForAll(address,address)',
+        'transferFrom(address,address,uint256)',
+        'safeTransferFrom(address,address,uint256)',
+        'safeTransferFrom(address,address,uint256,bytes)',
+      ],
+      ERC721Enumerable: ['totalSupply()', 'tokenOfOwnerByIndex(address,uint256)', 'tokenByIndex(uint256)'],
+      ERC721Metadata: ['name()', 'symbol()', 'tokenURI(uint256)'],
+      AccessControl: [
+        'hasRole(bytes32,address)',
+        'getRoleAdmin(bytes32)',
+        'grantRole(bytes32,address)',
+        'revokeRole(bytes32,address)',
+        'renounceRole(bytes32,address)',
+      ],
+      ERC2981: ['royaltyInfo(uint256,uint256)'],
+    }
+
+    const INTERFACE_IDS = {}
+    const FN_SIGNATURES = {}
+    for (const k of Object.getOwnPropertyNames(INTERFACES)) {
+      INTERFACE_IDS[k] = makeInterfaceId.ERC165(INTERFACES[k])
+      for (const fnName of INTERFACES[k]) {
+        // the interface id of a single function is equivalent to its function signature
+        FN_SIGNATURES[fnName] = makeInterfaceId.ERC165([fnName]);
+      }
+    }
+    for (const k of Object.getOwnPropertyNames(INTERFACES)) {
+      const interfaceId = INTERFACE_IDS[k]
+      expect(await this.canisNFT.supportsInterface(interfaceId)).to.equal(true)
+    }
   })
 })
