@@ -28,7 +28,6 @@ contract Royalty is Ownable, PaymentSplitter {
      */
     function removePayee(uint256 indexPayee, address account) external onlyOwner {
         require(account != address(0), "Royalty: account is the zero address");
-        require(_shares[account] != 0, "Royalty: account not has shares");
         require(indexPayee < _payees.length, "Royalty: indexPayee not exist in payees");
         require(_payees[indexPayee] == account, "Royalty: account is not the same as account in the index");
 
