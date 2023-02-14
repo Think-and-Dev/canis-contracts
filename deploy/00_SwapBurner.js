@@ -5,7 +5,7 @@ const contractName = 'SwapBurner'
 const {verifyContract} = require('../utils/verifyContracts')
 
 module.exports = async (hardhat) => {
-  const {getNamedAccounts, deployments, getChainId, network} = hardhat
+  const {getNamedAccounts, deployments, getChainId, network, ethers} = hardhat
   const {deploy} = deployments
   const {deployer} = await getNamedAccounts()
 
@@ -24,17 +24,17 @@ module.exports = async (hardhat) => {
 
   // If avalanch we don't deploy the swap burner because UBI token does not exists in that network
   if (!uniswapRouter || !ubiToken) {
-    dim(`Network ${chainName(chainId)} does not have UBI token, so swapBurner is not going to be deployed`)
+    cyan(`Network ${chainName(chainId)} does not have UBI token, so swapBurner is not going to be deployed`)
     return
   }
   const constructorArguments = [uniswapRouter, ubiToken]
 
   cyan(`\nDeploying ${contractName}...`)
   const SwapBurnerResult = await deploy(contractName, {
+    deterministicDeployment: ethers.utils.keccak256(ethers.utils.toUtf8Bytes(process.env.SALT)),
     args: constructorArguments,
     contract: contractName,
-    from: deployer,
-    skipIfAlreadyDeployed: false
+    from: deployer
   })
 
   displayResult(contractName, SwapBurnerResult)
@@ -44,6 +44,14 @@ module.exports = async (hardhat) => {
   dim('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
 
   await verifyContract(network, SwapBurnerResult, contractName, constructorArguments)
+
+  if (!isTestEnvironment) {
+    cyan(`Approving ${contractName} Uniswap UBI...`)
+    const swapBurner = await ethers.getContract('SwapBurner')
+    await swapBurner.approveUniSwap()
+  } else {
+    cyan(`Network ${chainName(chainId)} is testnet skiping approve`)
+  }
 
   return true
 }

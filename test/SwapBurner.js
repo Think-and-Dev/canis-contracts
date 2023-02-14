@@ -40,46 +40,17 @@ describe('Swap Burner', function () {
   it('Should be able to approve UniswapRouter', async () => {
     //GIVEN
     const initialAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    const allowance = '1000000'
     //WHEN
-    await this.swapBurner.approveUniSwap(allowance)
+    await this.swapBurner.approveUniSwap()
     const finalAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
     //THEN
     expect(initialAllowance).to.be.equal(0)
-    expect(finalAllowance).to.be.equal(allowance)
-  })
-
-  it('Should be able to increase allowance to UniswapRouter', async () => {
-    //GIVEN
-    const allowance = '1000000'
-    await this.swapBurner.approveUniSwap(allowance)
-    const initialAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    const toAddAllowance = '50'
-    //WHEN
-    await this.swapBurner.increaseUniswapAllowance(toAddAllowance)
-    const finalAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    //THEN
-    expect(initialAllowance).to.be.equal(allowance)
-    expect(finalAllowance).to.be.equal('1000050')
-  })
-
-  it('Should be able to decrease allowance to UniswapRouter', async () => {
-    //GIVEN
-    const allowance = '1000050'
-    await this.swapBurner.approveUniSwap(allowance)
-    const initialAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    const toDecreaseAllowance = '50'
-    //WHEN
-    await this.swapBurner.decreaseUniswapAllowance(toDecreaseAllowance)
-    const finalAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    //THEN
-    expect(initialAllowance).to.be.equal(allowance)
-    expect(finalAllowance).to.be.equal('1000000')
+    expect(finalAllowance).to.be.equal(ethers.constants.MaxUint256)
   })
 
   it('Should be able to receive ether, swap and burn UBI tokens', async () => {
     //GIVEN
-    await this.swapBurner.approveUniSwap('1000000')
+    await this.swapBurner.approveUniSwap()
     /**
      * REQUIRED TO MOCK CONTRACT WITH UBI TOKENS
      */
@@ -106,7 +77,7 @@ describe('Swap Burner', function () {
 
   it('Should emit event when receiveSwapAndBurn', async () => {
     //GIVEN
-    await this.swapBurner.approveUniSwap('1000000')
+    await this.swapBurner.approveUniSwap()
     /**
      * REQUIRED TO MOCK CONTRACT WITH UBI TOKENS
      */

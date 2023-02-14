@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./interfaces/IUniswap.sol";
 import "./interfaces/IUBI.sol";
-import "hardhat/console.sol";
 
 /// @title Canis Swap and Burn
 /// @notice contract that swaps native currency for UBI and burns it
@@ -17,8 +16,6 @@ contract SwapBurner is Ownable {
     address public immutable UBI;
 
     event Initialized(address indexed uniswapRouter, address indexed ubiToken);
-    event UniswapApproved(uint256 amount);
-    event UniswapAllowanceUpdated(uint256 oldAmount, uint256 newAmount);
     event SwapAndBurn(address indexed sender, uint256 nativeAmount, uint256 UBIBurnedAmount);
 
     /**
@@ -51,26 +48,8 @@ contract SwapBurner is Ownable {
     /********** SETTERS ***********/
 
     /// @notice Approve UniswapRouter to take tokens
-    /// @param amount amount of tokens to approve to Uniswap
-    function approveUniSwap(uint256 amount) external onlyOwner {
-        IUBI(UBI).approve(Uniswap, amount);
-        emit UniswapApproved(amount);
-    }
-
-    /// @notice Increase amount of approved tokens to UniswapRouter
-    /// @param amount amount of tokens to approve to Uniswap
-    function increaseUniswapAllowance(uint256 amount) external onlyOwner {
-        uint256 oldAllowance = IUBI(UBI).allowance(address(this), Uniswap);
-        require(IUBI(UBI).increaseAllowance(Uniswap, amount) == true, "UBI INCREAS ALLOWANCE WENT WRONG");
-        emit UniswapAllowanceUpdated(oldAllowance, amount);
-    }
-
-    /// @notice Decrease amount of approved tokens to UniswapRouter
-    /// @param amount amount of tokens to approve to Uniswap
-    function decreaseUniswapAllowance(uint256 amount) external onlyOwner {
-        uint256 oldAllowance = IUBI(UBI).allowance(address(this), Uniswap);
-        require(IUBI(UBI).decreaseAllowance(Uniswap, amount) == true, "UBI DECREASE ALLOWANCE WENT WRONG");
-        emit UniswapAllowanceUpdated(oldAllowance, amount);
+    function approveUniSwap() external onlyOwner {
+        IUBI(UBI).approve(Uniswap, type(uint256).max);
     }
 
     /********** INTERFACE ***********/
