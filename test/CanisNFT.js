@@ -3,6 +3,7 @@ const {expect} = require('chai')
 const {ethers, deployments, getNamedAccounts, getChainId, config} = require('hardhat')
 const proyectConfig = require('../config')
 const {keccak256} = require('ethers/lib/utils')
+const {BigNumber} = ethers
 
 /**
  * By default, ContractFactory and Contract instances are connected to the first signer.
@@ -20,14 +21,12 @@ describe('Canis NFT', function () {
     this.charly = signers[3]
     this.royaltyReceiver = signers[4]
     this.CanisNFT = await ethers.getContractFactory('CanisNFT')
-    this.Royalty = await ethers.getContractFactory('Royalty')
-    this.DEFAULT_ADMIN_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000000'
+    this.DEFAULT_ADMIN_ROLE = ethers.constants.HashZero
   })
 
   beforeEach(async () => {
     await deployments.fixture(['Royalty', 'CanisNFT', 'SwapBurner'])
     this.canisNFT = await ethers.getContract('CanisNFT', this.deployer)
-    //await ethers.getContract('Royalty', deployer)
     this.defaultRoyaltyReceiver = (await ethers.getContract('Royalty', this.deployer)).address
   })
 
@@ -41,6 +40,8 @@ describe('Canis NFT', function () {
     const expectedContractUri = this.config.contractUri
     const salePrice = 1000
     const expectedRoyaltyAmount = salePrice * (expectedDefaultFeeNumerator / 10000)
+    const expectedPrimarySalePrice = this.config.primarySalePrice
+    const expectedPrimarySaleReceiverAddress = this.config.primarySaleReceiverAddress
 
     //WHEN
     const name = await this.canisNFT.name()
@@ -48,6 +49,10 @@ describe('Canis NFT', function () {
     const cap = await this.canisNFT.CAP()
     const {receiver, royaltyAmount} = await this.canisNFT.royaltyInfo(1, 1000)
     const contractUri = await this.canisNFT.contractURI()
+    const primarySalePrice = await this.canisNFT.primarySalePrice()
+    const primarySaleReceiverAddress = await this.canisNFT.primarySaleReceiverAddress()
+    const minterRole = await this.canisNFT.MINTER_ROLE()
+
     //THEN
     expect(name).to.be.equal(expectedName)
     expect(symbol).to.be.equal(expectedSymbol)
@@ -55,7 +60,10 @@ describe('Canis NFT', function () {
     expect(receiver).to.be.equal(expectedDefaultRoyaltyReceiver)
     expect(royaltyAmount).to.be.equal(expectedRoyaltyAmount)
     expect(contractUri).to.be.equal(expectedContractUri)
-    expect(true).to.be.equal(await this.canisNFT.hasRole(this.DEFAULT_ADMIN_ROLE, this.deployer))
+    expect(primarySalePrice).to.be.equal(expectedPrimarySalePrice)
+    expect(primarySaleReceiverAddress).to.be.equal(expectedPrimarySaleReceiverAddress)
+    expect(await this.canisNFT.hasRole(this.DEFAULT_ADMIN_ROLE, this.deployer)).to.be.equal(true)
+    expect(await this.canisNFT.hasRole(minterRole, this.deployer)).to.be.equal(true)
   })
 
   it('Should not create contract if cap is zero', async () => {
@@ -66,11 +74,104 @@ describe('Canis NFT', function () {
     const defaultRoyaltyReceiver = this.defaultRoyaltyReceiver
     const defaultFeeNumerator = this.config.defaultFeeNumerator
     const contractUri = this.config.contractUri
+    const primarySalePrice = this.config.primarySalePrice
+    const primarySaleReceiverAddress = this.config.primarySaleReceiverAddress
     //WHEN //THEN
 
     await expect(
-      this.CanisNFT.deploy(cap, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri)
+      this.CanisNFT.deploy(
+        this.deployer,
+        cap,
+        name,
+        symbol,
+        defaultRoyaltyReceiver,
+        defaultFeeNumerator,
+        contractUri,
+        primarySalePrice,
+        primarySaleReceiverAddress
+      )
     ).to.be.revertedWith('NFTCapped: cap is 0')
+  })
+
+  it('Should not create contract if royaltyReceiver is zero', async () => {
+    //GIVEN
+    const name = this.config.name
+    const symbol = this.config.symbol
+    const cap = 1
+    const defaultRoyaltyReceiver = ethers.constants.AddressZero
+    const defaultFeeNumerator = this.config.defaultFeeNumerator
+    const contractUri = this.config.contractUri
+    const primarySalePrice = this.config.primarySalePrice
+    const primarySaleReceiverAddress = this.config.primarySaleReceiverAddress
+    //WHEN //THEN
+
+    await expect(
+      this.CanisNFT.deploy(
+        this.deployer,
+        cap,
+        name,
+        symbol,
+        defaultRoyaltyReceiver,
+        defaultFeeNumerator,
+        contractUri,
+        primarySalePrice,
+        primarySaleReceiverAddress
+      )
+    ).to.be.revertedWith('ERC2981: invalid receiver')
+  })
+
+  it('Should not create contract if primarySalePrice is zero', async () => {
+    //GIVEN
+    const name = this.config.name
+    const symbol = this.config.symbol
+    const cap = 1
+    const defaultRoyaltyReceiver = this.defaultRoyaltyReceiver
+    const defaultFeeNumerator = this.config.defaultFeeNumerator
+    const contractUri = this.config.contractUri
+    const primarySalePrice = 0
+    const primarySaleReceiverAddress = this.config.primarySaleReceiverAddress
+    //WHEN //THEN
+
+    await expect(
+      this.CanisNFT.deploy(
+        this.deployer,
+        cap,
+        name,
+        symbol,
+        defaultRoyaltyReceiver,
+        defaultFeeNumerator,
+        contractUri,
+        primarySalePrice,
+        primarySaleReceiverAddress
+      )
+    ).to.be.revertedWith('NFTCapped: primarySalePrice is 0')
+  })
+
+  it('Should not create contract if primarySalePrice is zero', async () => {
+    //GIVEN
+    const name = this.config.name
+    const symbol = this.config.symbol
+    const cap = 1
+    const defaultRoyaltyReceiver = this.defaultRoyaltyReceiver
+    const defaultFeeNumerator = this.config.defaultFeeNumerator
+    const contractUri = this.config.contractUri
+    const primarySalePrice = this.config.primarySalePrice
+    const primarySaleReceiverAddress = ethers.constants.AddressZero
+    //WHEN //THEN
+
+    await expect(
+      this.CanisNFT.deploy(
+        this.deployer,
+        cap,
+        name,
+        symbol,
+        defaultRoyaltyReceiver,
+        defaultFeeNumerator,
+        contractUri,
+        primarySalePrice,
+        primarySaleReceiverAddress
+      )
+    ).to.be.revertedWith('NFTCapped: primarySaleReceiverAddress is 0')
   })
 
   it('Should be able to mint owner', async () => {
@@ -131,15 +232,6 @@ describe('Canis NFT', function () {
     //WHEN //THEN
     await expect(this.canisNFT.connect(this.bob).tokenURI(2)).to.be.revertedWith('ERC721: invalid token ID')
   })
-
-  // it('Should able to claim max claim is set as zero', async () => {
-  //   //GIVEN
-  //   await this.canisNFT.safeMint()
-  //   await this.canisNFT.connect(this.alice).claim();
-  //   const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
-  //   //WHEN //THEN
-  //   expect(aliceBalance).to.be.equal(1)
-  // })
 
   it('Should not be able to mint once gap limit is reached', async () => {
     //GIVEN
@@ -239,42 +331,6 @@ describe('Canis NFT', function () {
     //THEN
     expect(value).to.be.equal(expectedContractUri)
   })
-
-  // it('Should be able to claim no-owner', async () => {
-  //   //GIVEN
-  //   const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
-  //   await this.canisNFT.safeMint()
-  //   await this.canisNFT.safeMint()
-  //   await this.canisNFT.tokenURI(1)
-  //   await this.canisNFT.tokenURI(2)
-  //   //WHEN
-  //   await this.canisNFT.connect(this.alice).claim();
-  //   await this.canisNFT.connect(this.bob).claim();
-  //   const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
-  //   const bobBalance = await this.canisNFT.balanceOf(this.bob.address)
-  //   //WHEN //THEN
-  //   expect(aliceBalance).to.be.equal(1)
-  //   expect(bobBalance).to.be.equal(1)
-  // })
-
-  // it('Should not be able to claim no-owner', async () => {
-  //   //GIVEN
-  //   const tokenUris = ["ipfs://hash1", "ipfs://hash2"]
-  //   await this.canisNFT.safeMint()
-  //   await this.canisNFT.safeMint()
-  //   await this.canisNFT.tokenURI(1)
-  //   await this.canisNFT.tokenURI(2)
-  //   //WHEN
-  //   await this.canisNFT.connect(this.alice).claim();
-  //   await this.canisNFT.connect(this.bob).claim();
-  //   const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
-  //   const bobBalance = await this.canisNFT.balanceOf(this.bob.address)
-  //   //WHEN //THEN
-  //   expect(aliceBalance).to.be.equal(1)
-  //   expect(bobBalance).to.be.equal(1)
-  //   await expect(this.canisNFT.connect(this.charly).claim()).to.be.revertedWith('CANISNFT: CANNOT MINT NON GIFTABLE NFT')
-  // })
-
   it('Should not have a default value for contractUri', async () => {
     //GIVEN
     //WHEN
@@ -290,6 +346,37 @@ describe('Canis NFT', function () {
     await expect(this.canisNFT.setContractURI(contractUri))
       .to.emit(this.canisNFT, 'ContractURIUpdated')
       .withArgs(contractUri)
+  })
+
+  it('Should be able to verify', async () => {
+    //GIVEN
+    const payload = [
+      this.alice.address,
+      keccak256(Buffer.from('ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json')),
+      1,
+      31337
+    ]
+    const mintRequestPayload = {
+      to: this.alice.address,
+      uri: 'ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json',
+      tokenId: 1,
+      chainId: 31337
+    }
+    //mint nft
+    await this.canisNFT.safeLazyMint()
+    //get wallet and sign
+    const accounts = config.networks.hardhat.accounts
+    const wallet1 = ethers.Wallet.fromMnemonic(accounts.mnemonic, accounts.path + `/${0}`)
+    // const wallet = new ethers.Wallet(wallet1.privateKey);
+    const hashToken = Buffer.from(
+      ethers.utils.solidityKeccak256(['address', 'bytes32', 'uint256', 'uint256'], payload).slice(2),
+      'hex'
+    )
+    const hashSig = await wallet1.signMessage(hashToken)
+    //WHEN
+    const signer = await this.canisNFT.connect(this.alice).verify(mintRequestPayload, hashSig)
+    //THEN
+    expect(signer).to.be.equal(wallet1.address)
   })
 
   it('Should be able to claim', async () => {
@@ -317,12 +404,52 @@ describe('Canis NFT', function () {
       'hex'
     )
     const hashSig = await wallet1.signMessage(hashToken)
+
+    const primarySaleReceiverAddress = this.config.primarySaleReceiverAddress
+    const previousBalance = await ethers.provider.getBalance(primarySaleReceiverAddress)
     //WHEN
-    await this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: '100000000000000'})
+    await this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: this.config.primarySalePrice})
     //THEN
     const aliceBalance = await this.canisNFT.balanceOf(this.alice.address)
+    const currentBalance = await ethers.provider.getBalance(primarySaleReceiverAddress)
     expect(aliceBalance).to.be.equal(1)
+    expect(currentBalance).to.be.equal(previousBalance.add(this.config.primarySalePrice))
   })
+
+  it('Should not be able to claim with lower payments', async () => {
+    //GIVEN
+    const payload = [
+      this.alice.address,
+      keccak256(Buffer.from('ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json')),
+      1,
+      31337
+    ]
+    const mintRequestPayload = {
+      to: this.alice.address,
+      uri: 'ipfs://bafybeibhjlqtsjxsrygxyjluhyffxmnfwnkiha72olxnqk6yfc63lsjtjq/dog5.json',
+      tokenId: 1,
+      chainId: 31337
+    }
+    //mint nft
+    await this.canisNFT.safeLazyMint()
+    //get wallet and sign
+    const accounts = config.networks.hardhat.accounts
+    const wallet1 = ethers.Wallet.fromMnemonic(accounts.mnemonic, accounts.path + `/${0}`)
+    // const wallet = new ethers.Wallet(wallet1.privateKey);
+    const hashToken = Buffer.from(
+      ethers.utils.solidityKeccak256(['address', 'bytes32', 'uint256', 'uint256'], payload).slice(2),
+      'hex'
+    )
+    const hashSig = await wallet1.signMessage(hashToken)
+    //WHEN
+    //THEN
+    await expect(
+      this.canisNFT
+        .connect(this.alice)
+        .claim(mintRequestPayload, hashSig, {value: parseInt(this.config.primarySalePrice) - 1})
+    ).to.be.revertedWith(`CANISNFT: Payment is less than primarySalePrice`)
+  })
+
   it('Should not be able to claim same tokenId', async () => {
     //GIVEN
     const payload = [
@@ -349,12 +476,13 @@ describe('Canis NFT', function () {
     )
     const hashSig = await wallet1.signMessage(hashToken)
     //WHEN
-    await this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: '100000000000000'})
+    await this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: this.config.primarySalePrice})
     //THEN
     await expect(
-      this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: '100000000000000'})
+      this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: this.config.primarySalePrice})
     ).to.be.revertedWith(`CANISNFT: tokenId not available`)
   })
+
   it('Should not be able to claim different chainId', async () => {
     //GIVEN
     const payload = [
@@ -383,9 +511,10 @@ describe('Canis NFT', function () {
     //WHEN
     //THEN
     await expect(
-      this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: '100000000000000'})
+      this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: this.config.primarySalePrice})
     ).to.be.revertedWith(`CANISNFT: the chain id must be the same as the network`)
   })
+
   it('Should not be able to claim signed by not role mint', async () => {
     //GIVEN
     const payload = [
@@ -417,6 +546,7 @@ describe('Canis NFT', function () {
       this.canisNFT.connect(this.alice).claim(mintRequestPayload, hashSig, {value: '100000000000000'})
     ).to.be.revertedWith(`CANISNFT: must have minter role to mint`)
   })
+
   it('Should not be able to claim not available tokenId', async () => {
     //GIVEN
     const payload = [

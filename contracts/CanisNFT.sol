@@ -17,6 +17,10 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     uint256 public immutable CAP;
     /// @dev ContractUri
     string public contractUri;
+    /// @dev Primary Sale Price
+    uint256 public primarySalePrice;
+    /// @dev Primary Sale Receiver Address
+    address payable public primarySaleReceiverAddress;
 
     /// @dev Private counter to make internal security checks
     using Counters for Counters.Counter;
@@ -34,12 +38,15 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     mapping(uint256 => bool) private availableToMint;
 
     event Initialized(
+        address owner,
         uint256 cap,
         string name,
         string symbol,
         address defaultRoyaltyReceiver,
         uint96 defaultFeeNumerator,
-        string contractUri
+        string contractUri,
+        uint256 primarySalePrice,
+        address primarySaleReceiverAddress
     );
     event DefaultRoyaltyUpdated(address indexed royaltyReceiver, uint96 feeNumerator);
     event Claimed(address indexed to, uint256 tokenId);
@@ -52,21 +59,31 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     /// @param defaultRoyaltyReceiver NFT Royalties receiver for all the collection
     /// @param defaultFeeNumerator Fees to be charged for royalties
     /// @param _contractUri Contract Uri
+    /// @param _primarySalePrice Primary Sale Price
+    /// @param _primarySaleReceiverAddress Primary Sale Receiver Address
     constructor(
+        address owner,
         uint256 cap_,
         string memory name,
         string memory symbol,
         address defaultRoyaltyReceiver,
         uint96 defaultFeeNumerator,
-        string memory _contractUri
+        string memory _contractUri,
+        uint256 _primarySalePrice,
+        address _primarySaleReceiverAddress
     ) ERC721(name, symbol) {
+        require(owner != address(0), "NFTCapped: owner is 0");
         require(cap_ > 0, "NFTCapped: cap is 0");
+        require(_primarySalePrice > 0, "NFTCapped: primarySalePrice is 0");
+        require(_primarySaleReceiverAddress != address(0), "NFTCapped: primarySaleReceiverAddress is 0");
         CAP = cap_;
         contractUri = _contractUri;
+        primarySalePrice = _primarySalePrice;
+        primarySaleReceiverAddress = payable(_primarySaleReceiverAddress);
         super._setDefaultRoyalty(defaultRoyaltyReceiver, defaultFeeNumerator);
-        super._setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        super._setupRole(MINTER_ROLE, _msgSender());
-        emit Initialized(CAP, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri);
+        super._setupRole(DEFAULT_ADMIN_ROLE, owner);
+        super._setupRole(MINTER_ROLE, owner);
+        emit Initialized(owner, CAP, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri, _primarySalePrice, _primarySaleReceiverAddress);
     }
 
     /********** GETTERS ***********/
@@ -185,6 +202,9 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         ISignatureMintERC721.MintRequest calldata request,
         bytes calldata signature
     ) public payable returns (uint256) {
+        require(msg.value >= primarySalePrice, "CANISNFT: Payment is less than primarySalePrice");
+        (bool sent, ) = primarySaleReceiverAddress.call{value: msg.value}("");
+        require(sent, "CANISNFT: Failed to send payment");
         //validate request
         _processRequest(request, signature);
         //mint nft
@@ -201,6 +221,14 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     function verify(
         ISignatureMintERC721.MintRequest calldata _req,
         bytes calldata _signature
+    ) public view returns (address signer) {
+        return _verify(_req, _signature);
+    }
+
+    /// @dev Verifies that a mint request is signed by an authorized account.
+    function _verify(
+        ISignatureMintERC721.MintRequest calldata _req,
+        bytes calldata _signature
     ) internal view returns (address signer) {
         signer = _recoverAddress(_req, _signature);
         require(availableToMint[_req.tokenId], "CANISNFT: tokenId not available");
@@ -213,7 +241,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         bytes calldata _signature
     ) internal view returns (address signer) {
         //validate signer
-        signer = verify(_req, _signature);
+        signer = _verify(_req, _signature);
 
         require(_req.to != address(0), "CANISNFT: recipient undefined");
         require(_req.tokenId <= CAP, "CANISNFT: cap exceeded");
