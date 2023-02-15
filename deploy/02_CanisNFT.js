@@ -13,7 +13,8 @@ module.exports = async (hardhat) => {
 
   const defaultRoyaltyReceiver = (await ethers.getContract('Royalty', this.deployer)).address
 
-  const {cap, name, symbol, defaultFeeNumerator, contractUri} = config[contractName][chainId]
+  const {minter, cap, name, symbol, defaultFeeNumerator, contractUri, primarySalePrice, primarySaleReceiverAddress} =
+    config[contractName][chainId]
 
   const isTestEnvironment = chainId === 31337 || chainId === 1337
 
@@ -23,7 +24,18 @@ module.exports = async (hardhat) => {
 
   dim(`network: ${chainName(chainId)} (${isTestEnvironment ? 'local' : 'remote'})`)
   dim(`deployer: ${deployer}`)
-  const constructorArguments = [cap, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri]
+  const constructorArguments = [
+    deployer,
+    minter,
+    cap,
+    name,
+    symbol,
+    defaultRoyaltyReceiver,
+    defaultFeeNumerator,
+    contractUri,
+    primarySalePrice,
+    primarySaleReceiverAddress
+  ]
 
   cyan(`\nDeploying ${contractName}...`)
   const CanisNFTResult = await deploy(contractName, {

@@ -41,13 +41,15 @@ if (process.env.HDWALLET_MNEMONIC || process.env.PRIVATE_KEY) {
   networks.mumbai = {
     chainId: 80001,
     url: 'https://rpc-mumbai.maticvigil.com',
-    accounts
+    accounts,
+    live: true
   }
 
   networks.avalache = {
     chainId: 43114,
     url: 'https://api.avax.network/ext/bc/C/rpc',
-    accounts
+    accounts,
+    live: true
   }
 
   networks.fuji = {
@@ -57,7 +59,8 @@ if (process.env.HDWALLET_MNEMONIC || process.env.PRIVATE_KEY) {
     gas: 2100000,
     gasPrice: 50000000000,
     maxPriorityFeePerGas: 2000000000,
-    maxFeePerGas: 51500000000
+    maxFeePerGas: 51500000000,
+    live: true
   }
 }
 
@@ -72,12 +75,14 @@ if (process.env.INFURA_API_KEY && (process.env.HDWALLET_MNEMONIC || process.env.
     gas: 2100000,
     gasPrice: 50000000000,
     maxPriorityFeePerGas: 2000000000,
-    maxFeePerGas: 51500000000
+    maxFeePerGas: 51500000000,
+    live: true
   }
 
   networks.mainnet = {
     url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
-    accounts
+    accounts,
+    live: true
   }
 } else {
   console.warn('No infura or hdwallet available for testnets')

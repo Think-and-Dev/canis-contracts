@@ -31,7 +31,6 @@ module.exports = async (hardhat) => {
 
   cyan(`\nDeploying ${contractName}...`)
   const SwapBurnerResult = await deploy(contractName, {
-    deterministicDeployment: ethers.utils.keccak256(ethers.utils.toUtf8Bytes(process.env.SALT)),
     args: constructorArguments,
     contract: contractName,
     from: deployer
@@ -47,7 +46,7 @@ module.exports = async (hardhat) => {
 
   if (!isTestEnvironment) {
     cyan(`Approving ${contractName} Uniswap UBI...`)
-    const swapBurner = await ethers.getContract('SwapBurner')
+    const swapBurner = await ethers.getContract('SwapBurner', deployer)
     await swapBurner.approveUniSwap()
   } else {
     cyan(`Network ${chainName(chainId)} is testnet skiping approve`)
