@@ -19,7 +19,7 @@ const config = {
       defaultFeeNumerator: 1000, //10%
       primarySalePrice: '150000000000000000', //0,15 ETH
       primarySaleReceiverAddress: '0x07e28B3350bC6a0D421Bf5F6308a399F4c99Ce88',
-      contractUri: '',
+      contractUri: 'ipfs://bafybeia6zztngvh5phk3ifwuzy2yzpw7qe2bft44yz7tqpyjhqwwinyaiq/contract-level.json',
       assetToMint: 778
     },
     43114: {
@@ -39,7 +39,7 @@ const config = {
       name: 'CanisNFT',
       symbol: 'CANIS',
       defaultFeeNumerator: 1000, //10%
-      contractUri: '',
+      contractUri: 'ipfs://bafybeihby3scuipejqpb3wq3zlrtecwolgaqdt7amv773telbaa3724avq/contract-level.json',
       primarySalePrice: '1250000000000000000', //1,25 AVAX
       primarySaleReceiverAddress: '0x07e28B3350bC6a0D421Bf5F6308a399F4c99Ce88',
       assetToMint: 333
