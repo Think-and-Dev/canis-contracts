@@ -55,39 +55,35 @@ describe('Swap Burner', function () {
      * REQUIRED TO MOCK CONTRACT WITH UBI TOKENS
      */
     await this.UBI.transfer(this.uniswapRouter.address, '1000')
-    const initialAliceUBIBalance = await this.UBI.balanceOf(this.alice.address)
+    const initialSwapBurnerUBIBalance = await this.UBI.balanceOf(this.swapBurner.address)
     const initialTotalUBISupply = await this.UBI.totalSupply()
     const mockSwapFactor = await this.uniswapRouter.mulFactor()
+    this.alice.sendTransaction({to: this.swapBurner.address, value: '200'})
     //WHEN
-    const aliceInitialETHBalance = await ethers.provider.getBalance(this.alice.address)
-    await this.swapBurner.connect(this.alice).receiveSwapAndBurn({
-      value: '200'
-    })
-    const finalAliceUBIBalance = await this.UBI.balanceOf(this.alice.address)
+    const swapBurnerInitialETHBalance = await ethers.provider.getBalance(this.swapBurner.address)
+    await this.swapBurner.connect(this.alice).swapAndBurn()
+    const finalSwapBurnerUBIBalance = await this.UBI.balanceOf(this.swapBurner.address)
     const expectedFinalUBISupply = 1000000000000 - 200 / mockSwapFactor
     const finalTotalUBISupply = await this.UBI.totalSupply()
-    const aliceFinalETHBalance = await ethers.provider.getBalance(this.alice.address)
+    const swapBurnerFinalETHBalance = await ethers.provider.getBalance(this.swapBurner.address)
     //THEN
-    expect(initialAliceUBIBalance).to.be.equal(0)
-    expect(finalAliceUBIBalance).to.be.equal(0)
+    expect(initialSwapBurnerUBIBalance).to.be.equal(0)
+    expect(finalSwapBurnerUBIBalance).to.be.equal(0)
     expect(initialTotalUBISupply).to.be.equal(1000000000000)
     expect(finalTotalUBISupply).to.be.equal(expectedFinalUBISupply)
-    expect(aliceFinalETHBalance).to.be.lt(aliceInitialETHBalance)
+    expect(swapBurnerFinalETHBalance).to.be.lte(swapBurnerInitialETHBalance)
   })
 
-  it('Should emit event when receiveSwapAndBurn', async () => {
+  it('Should emit event when swapAndBurn', async () => {
     //GIVEN
     await this.swapBurner.approveUniSwap()
+    this.alice.sendTransaction({to: this.swapBurner.address, value: '200'})
     /**
      * REQUIRED TO MOCK CONTRACT WITH UBI TOKENS
      */
     await this.UBI.transfer(this.uniswapRouter.address, '1000')
     //WHEN THEN
-    await expect(
-      this.swapBurner.connect(this.alice).receiveSwapAndBurn({
-        value: '200'
-      })
-    )
+    await expect(this.swapBurner.connect(this.alice).swapAndBurn())
       .to.emit(this.swapBurner, 'SwapAndBurn')
       .withArgs(this.alice.address, 200, 100)
   })
