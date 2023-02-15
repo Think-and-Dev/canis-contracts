@@ -26,15 +26,12 @@ describe('Swap Burner', function () {
     //GIVEN
     const expectedUniswapAddress = this.uniswapRouter.address
     const expectedUBIToken = this.UBI.address
-    const expectedOwner = this.deployer
     //WHEN
     const uniswapRouter = await this.swapBurner.Uniswap()
     const ubiToken = await this.swapBurner.UBI()
-    const owner = await this.swapBurner.owner()
     //THEN
     expect(expectedUniswapAddress).to.be.equal(uniswapRouter)
     expect(expectedUBIToken).to.be.equal(ubiToken)
-    expect(owner).to.be.equal(expectedOwner)
   })
 
   it('Should be able to approve UniswapRouter', async () => {

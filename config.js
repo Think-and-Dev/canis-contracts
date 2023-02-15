@@ -96,7 +96,7 @@ const config = {
     5: {
       uniswapRouter: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
       // use UNI instead as UBI does not exist on goerli
-      ubiToken: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'
+      ubiToken: '0xCeb20ca274C9B8D8cE030d64ac5737bfF70ca7cB'
     },
     31337: {
       uniswapRouter: '0x080D834838dc9EE7154a5d13E03073CA2ADd0C92',

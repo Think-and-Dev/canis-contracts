@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IUniswapV2.sol";
 import "./interfaces/IUBI.sol";
 
 /// @title Canis Swap and Burn
 /// @notice contract that swaps native currency for UBI and burns it
 /// @author Think and Dev
-contract SwapBurner is Ownable {
+contract SwapBurner {
     /// @dev address of the uniswap router
-    address public Uniswap;
+    address public immutable Uniswap;
     /// @dev address of the UBI token
     address public immutable UBI;
 
@@ -38,7 +37,7 @@ contract SwapBurner is Ownable {
     /********** SETTERS ***********/
 
     /// @notice Approve UniswapRouter to take tokens
-    function approveUniSwap() external onlyOwner {
+    function approveUniSwap() public {
         IUBI(UBI).approve(Uniswap, type(uint256).max);
     }
 
