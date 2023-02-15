@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
@@ -13,6 +12,9 @@ import "./interfaces/ISignatureMintERC721.sol";
 /// @title Canis NFT contract
 /// @author Think and Dev
 contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlEnumerable {
+    using ECDSA for bytes32;
+    using Counters for Counters.Counter;
+
     /// @dev Max amount of NFTs to be minted
     uint256 public immutable CAP;
     /// @dev ContractUri
@@ -23,16 +25,12 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlE
     address payable public primarySaleReceiverAddress;
 
     /// @dev Private counter to make internal security checks
-    using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
     /**
      * @dev Minter rol
      */
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    using ECDSA for bytes32;
-
     bytes32 private constant TYPEHASH = keccak256("MintRequest(address to,string uri,uint256 tokenId)");
 
     mapping(uint256 => bool) private availableToMint;
