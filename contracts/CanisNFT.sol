@@ -51,6 +51,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     event DefaultRoyaltyUpdated(address indexed royaltyReceiver, uint96 feeNumerator);
     event Claimed(address indexed to, uint256 tokenId);
     event ContractURIUpdated(string indexed contractUri);
+    event PrimarySaleUpdated(address receiver, uint256 price);
 
     /// @notice Init contract
     /// @param cap_ Max amount of NFTs to be minted. Cannot change
@@ -106,6 +107,18 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     function setDefaultRoyalty(address receiver, uint96 feeNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         super._setDefaultRoyalty(receiver, feeNumerator);
         emit DefaultRoyaltyUpdated(receiver, feeNumerator);
+    }
+
+    /// @notice Primary sale config
+    /// @dev Set receiver and price to be charged
+    /// @param receiver Primary sale beneficiary
+    /// @param price Primary sale price
+    function setPrimarySaleReceiverAddress(address receiver, uint256 price) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(receiver != address(0), "NFTCapped: primarySaleReceiverAddress is 0");
+        require(price > 0, "NFTCapped: primarySalePrice is 0");
+        primarySaleReceiverAddress = payable(receiver);
+        primarySalePrice = price;
+        emit PrimarySaleUpdated(receiver, price);
     }
 
 
@@ -164,7 +177,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
 
     /// @notice Lazy Mint NFTs
     /// @return id of the next NFT to be minted
-    function safeLazyMint() external onlyRole(MINTER_ROLE) returns (uint256) {
+    function safeLazyMint() external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         _tokenIdCounter.increment();
         uint256 currentTokenId = _tokenIdCounter.current();
         require(currentTokenId <= CAP, "NFTCAPPED: cap exceeded");
@@ -175,7 +188,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     /// @notice Laxy Batch Mint NFTs
     /// @param quantity amount of NFTs to be minted
     /// @return id of the next NFT to be minted
-    function safeLazyMintBatch(uint256 quantity) external onlyRole(MINTER_ROLE) returns (uint256) {
+    function safeLazyMintBatch(uint256 quantity) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         uint256 currentTokenId = _tokenIdCounter.current();
         require(currentTokenId + quantity <= CAP, "NFTCAPPED: cap exceeded");
         for (uint256 i = 0; i < quantity; i++) {

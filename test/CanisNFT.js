@@ -275,6 +275,21 @@ describe('Canis NFT', function () {
 
   it('Should set default token royalty', async () => {
     //GIVEN
+    const receiver = this.royaltyReceiver.address
+    const price = 111
+    //WHEN
+    await expect(this.canisNFT.setPrimarySaleReceiverAddress(receiver, price))
+      .to.emit(this.canisNFT, 'PrimarySaleUpdated')
+      .withArgs(receiver, price)
+    //THEN
+    const actualPrimarySaleAddress = await this.canisNFT.primarySaleReceiverAddress()
+    const actualPrimaryPrice = await this.canisNFT.primarySalePrice()
+    expect(receiver).to.be.equal(actualPrimarySaleAddress)
+    expect(price).to.be.equal(actualPrimaryPrice)
+  })
+
+  it('Should set default token royalty', async () => {
+    //GIVEN
     const royaltyReceiver = this.royaltyReceiver.address
     const feeNumerator = 100
     //WHEN //THEN
@@ -284,10 +299,11 @@ describe('Canis NFT', function () {
   })
 
   it('If not set, royalty info should return constructor values', async () => {
-    //GIVEN //WHEN
+    //GIVEN
     const tokenId = 0
     const salePrice = 1000
     const expectedRoyaltyAmount = salePrice * (this.config.defaultFeeNumerator / 10000)
+    //WHEN
     const {receiver, royaltyAmount} = await this.canisNFT.royaltyInfo(tokenId, salePrice)
     //THEN
     expect(receiver).to.be.equal(this.defaultRoyaltyReceiver)
