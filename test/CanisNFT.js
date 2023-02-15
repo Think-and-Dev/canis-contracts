@@ -64,12 +64,14 @@ describe('Canis NFT', function () {
     expect(primarySaleReceiverAddress).to.be.equal(expectedPrimarySaleReceiverAddress)
     expect(await this.canisNFT.hasRole(this.DEFAULT_ADMIN_ROLE, this.deployer)).to.be.equal(true)
     expect(await this.canisNFT.hasRole(minterRole, this.deployer)).to.be.equal(true)
+    expect(await this.canisNFT.hasRole(minterRole, this.config.minter)).to.be.equal(true)
   })
 
   it('Should not create contract if cap is zero', async () => {
     //GIVEN
     const name = this.config.name
     const symbol = this.config.symbol
+    const minter = this.config.minter
     const cap = 0
     const defaultRoyaltyReceiver = this.defaultRoyaltyReceiver
     const defaultFeeNumerator = this.config.defaultFeeNumerator
@@ -81,6 +83,7 @@ describe('Canis NFT', function () {
     await expect(
       this.CanisNFT.deploy(
         this.deployer,
+        minter,
         cap,
         name,
         symbol,
@@ -97,6 +100,7 @@ describe('Canis NFT', function () {
     //GIVEN
     const name = this.config.name
     const symbol = this.config.symbol
+    const minter = this.config.minter
     const cap = 1
     const defaultRoyaltyReceiver = ethers.constants.AddressZero
     const defaultFeeNumerator = this.config.defaultFeeNumerator
@@ -108,6 +112,7 @@ describe('Canis NFT', function () {
     await expect(
       this.CanisNFT.deploy(
         this.deployer,
+        minter,
         cap,
         name,
         symbol,
@@ -124,6 +129,7 @@ describe('Canis NFT', function () {
     //GIVEN
     const name = this.config.name
     const symbol = this.config.symbol
+    const minter = this.config.minter
     const cap = 1
     const defaultRoyaltyReceiver = this.defaultRoyaltyReceiver
     const defaultFeeNumerator = this.config.defaultFeeNumerator
@@ -135,6 +141,7 @@ describe('Canis NFT', function () {
     await expect(
       this.CanisNFT.deploy(
         this.deployer,
+        minter,
         cap,
         name,
         symbol,
@@ -151,6 +158,7 @@ describe('Canis NFT', function () {
     //GIVEN
     const name = this.config.name
     const symbol = this.config.symbol
+    const minter = this.config.minter
     const cap = 1
     const defaultRoyaltyReceiver = this.defaultRoyaltyReceiver
     const defaultFeeNumerator = this.config.defaultFeeNumerator
@@ -162,6 +170,7 @@ describe('Canis NFT', function () {
     await expect(
       this.CanisNFT.deploy(
         this.deployer,
+        minter,
         cap,
         name,
         symbol,
@@ -172,6 +181,35 @@ describe('Canis NFT', function () {
         primarySaleReceiverAddress
       )
     ).to.be.revertedWith('NFTCapped: primarySaleReceiverAddress is 0')
+  })
+
+  it('Should not create contract if primarySalePrice is zero', async () => {
+    //GIVEN
+    const name = this.config.name
+    const symbol = this.config.symbol
+    const minter = ethers.constants.AddressZero
+    const cap = 1
+    const defaultRoyaltyReceiver = this.defaultRoyaltyReceiver
+    const defaultFeeNumerator = this.config.defaultFeeNumerator
+    const contractUri = this.config.contractUri
+    const primarySalePrice = this.config.primarySalePrice
+    const primarySaleReceiverAddress = this.config.primarySaleReceiverAddress
+    //WHEN //THEN
+
+    await expect(
+      this.CanisNFT.deploy(
+        this.deployer,
+        minter,
+        cap,
+        name,
+        symbol,
+        defaultRoyaltyReceiver,
+        defaultFeeNumerator,
+        contractUri,
+        primarySalePrice,
+        primarySaleReceiverAddress
+      )
+    ).to.be.revertedWith('NFTCapped: minter is 0')
   })
 
   it('Should be able to mint owner', async () => {

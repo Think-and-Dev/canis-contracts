@@ -5,14 +5,14 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "./interfaces/ISignatureMintERC721.sol";
 
 /// @title Canis NFT contract
 /// @author Think and Dev
-contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl {
+contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlEnumerable {
     /// @dev Max amount of NFTs to be minted
     uint256 public immutable CAP;
     /// @dev ContractUri
@@ -39,6 +39,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
 
     event Initialized(
         address owner,
+        address minter,
         uint256 cap,
         string name,
         string symbol,
@@ -64,6 +65,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     /// @param _primarySaleReceiverAddress Primary Sale Receiver Address
     constructor(
         address owner,
+        address minter,
         uint256 cap_,
         string memory name,
         string memory symbol,
@@ -74,6 +76,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         address _primarySaleReceiverAddress
     ) ERC721(name, symbol) {
         require(owner != address(0), "NFTCapped: owner is 0");
+        require(minter != address(0), "NFTCapped: minter is 0");
         require(cap_ > 0, "NFTCapped: cap is 0");
         require(_primarySalePrice > 0, "NFTCapped: primarySalePrice is 0");
         require(_primarySaleReceiverAddress != address(0), "NFTCapped: primarySaleReceiverAddress is 0");
@@ -84,7 +87,8 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         super._setDefaultRoyalty(defaultRoyaltyReceiver, defaultFeeNumerator);
         super._setupRole(DEFAULT_ADMIN_ROLE, owner);
         super._setupRole(MINTER_ROLE, owner);
-        emit Initialized(owner, CAP, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri, _primarySalePrice, _primarySaleReceiverAddress);
+        super._setupRole(MINTER_ROLE, minter);
+        emit Initialized(owner, minter, CAP, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri, _primarySalePrice, _primarySaleReceiverAddress);
     }
 
     /********** GETTERS ***********/
@@ -126,7 +130,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721, ERC721Enumerable, ERC2981, AccessControl) returns (bool) {
+    ) public view override(ERC721, ERC721Enumerable, ERC2981, AccessControlEnumerable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

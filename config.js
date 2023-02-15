@@ -1,6 +1,7 @@
 const config = {
   CanisNFT: {
     1: {
+      minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
       cap: 11111,
       name: 'CanisNFT',
       symbol: 'CANIS',
@@ -11,6 +12,7 @@ const config = {
       assetToMint: 778
     },
     5: {
+      minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
       cap: 11111,
       name: 'CanisNFT',
       symbol: 'CANIS',
@@ -21,6 +23,7 @@ const config = {
       assetToMint: 778
     },
     43114: {
+      minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
       cap: 11111,
       name: 'CanisNFT',
       symbol: 'CANIS',
@@ -31,6 +34,7 @@ const config = {
       assetToMint: 333
     },
     43113: {
+      minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
       cap: 11111,
       name: 'CanisNFT',
       symbol: 'CANIS',
@@ -41,6 +45,7 @@ const config = {
       assetToMint: 333
     },
     31337: {
+      minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
       cap: 10, //to some test modify to 11111
       name: 'CanisNFT',
       symbol: 'CANIS',

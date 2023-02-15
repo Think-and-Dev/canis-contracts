@@ -44,16 +44,6 @@ contract SwapBurner is Ownable {
 
     /********** INTERFACE ***********/
 
-    /// @notice Given a value of ETH, know the amount of UBI it is equal to
-    /// @param ethAmount eth amount to be converted to UBI
-    function getEstimatedUBIforETH(uint256 ethAmount) internal view returns (uint256[] memory) {
-        address[] memory path = new address[](2);
-        path[0] = IUniswapV2(Uniswap).WETH();
-        path[1] = UBI;
-
-        return IUniswapV2(Uniswap).getAmountsOut(ethAmount, path);
-    }
-
     /// @notice Swap ETH for UBI and Burn it
     function swapAndBurn() external returns (uint256[] memory amounts) {
         address[] memory path = new address[](2);
