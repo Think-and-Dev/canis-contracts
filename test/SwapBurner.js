@@ -13,111 +13,74 @@ describe('Swap Burner', function () {
     this.MockToken = await ethers.getContractFactory('MockToken')
     this.MockUniswapRouter = await ethers.getContractFactory('MockUniswapRouter')
     this.SwapBurner = await ethers.getContractFactory('SwapBurner')
-    this.swapDeadline = '1704215473' //Tue Jan 02 2024 17:11:13 GMT+0000
   })
 
   beforeEach(async () => {
     this.UBI = await this.MockToken.deploy('UBI Token', 'UBI', '1000000000000')
     this.WETH = await this.MockToken.deploy('WRAPPED ETH', 'WETH', '1000000000000')
     this.uniswapRouter = await this.MockUniswapRouter.deploy(this.WETH.address, this.UBI.address, 2)
-    this.swapBurner = await this.SwapBurner.deploy(this.uniswapRouter.address, this.UBI.address, this.swapDeadline)
+    this.swapBurner = await this.SwapBurner.deploy(this.uniswapRouter.address, this.UBI.address)
   })
 
   it('Should have initialized correctly', async () => {
     //GIVEN
     const expectedUniswapAddress = this.uniswapRouter.address
     const expectedUBIToken = this.UBI.address
-    const expectedOwner = this.deployer
     //WHEN
     const uniswapRouter = await this.swapBurner.Uniswap()
     const ubiToken = await this.swapBurner.UBI()
-    const owner = await this.swapBurner.owner()
     //THEN
     expect(expectedUniswapAddress).to.be.equal(uniswapRouter)
     expect(expectedUBIToken).to.be.equal(ubiToken)
-    expect(owner).to.be.equal(expectedOwner)
   })
 
   it('Should be able to approve UniswapRouter', async () => {
     //GIVEN
     const initialAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    const allowance = '1000000'
     //WHEN
-    await this.swapBurner.approveUniSwap(allowance)
+    await this.swapBurner.approveUniSwap()
     const finalAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
     //THEN
     expect(initialAllowance).to.be.equal(0)
-    expect(finalAllowance).to.be.equal(allowance)
-  })
-
-  it('Should be able to increase allowance to UniswapRouter', async () => {
-    //GIVEN
-    const allowance = '1000000'
-    await this.swapBurner.approveUniSwap(allowance)
-    const initialAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    const toAddAllowance = '50'
-    //WHEN
-    await this.swapBurner.increaseUniswapAllowance(toAddAllowance)
-    const finalAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    //THEN
-    expect(initialAllowance).to.be.equal(allowance)
-    expect(finalAllowance).to.be.equal('1000050')
-  })
-
-  it('Should be able to decrease allowance to UniswapRouter', async () => {
-    //GIVEN
-    const allowance = '1000050'
-    await this.swapBurner.approveUniSwap(allowance)
-    const initialAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    const toDecreaseAllowance = '50'
-    //WHEN
-    await this.swapBurner.decreaseUniswapAllowance(toDecreaseAllowance)
-    const finalAllowance = await this.UBI.allowance(this.swapBurner.address, this.uniswapRouter.address)
-    //THEN
-    expect(initialAllowance).to.be.equal(allowance)
-    expect(finalAllowance).to.be.equal('1000000')
+    expect(finalAllowance).to.be.equal(ethers.constants.MaxUint256)
   })
 
   it('Should be able to receive ether, swap and burn UBI tokens', async () => {
     //GIVEN
-    await this.swapBurner.approveUniSwap('1000000')
+    await this.swapBurner.approveUniSwap()
     /**
      * REQUIRED TO MOCK CONTRACT WITH UBI TOKENS
      */
     await this.UBI.transfer(this.uniswapRouter.address, '1000')
-    const initialAliceUBIBalance = await this.UBI.balanceOf(this.alice.address)
+    const initialSwapBurnerUBIBalance = await this.UBI.balanceOf(this.swapBurner.address)
     const initialTotalUBISupply = await this.UBI.totalSupply()
     const mockSwapFactor = await this.uniswapRouter.mulFactor()
+    this.alice.sendTransaction({to: this.swapBurner.address, value: '200'})
     //WHEN
-    const aliceInitialETHBalance = await ethers.provider.getBalance(this.alice.address)
-    await this.swapBurner.connect(this.alice).receiveSwapAndBurn({
-      value: '200'
-    })
-    const finalAliceUBIBalance = await this.UBI.balanceOf(this.alice.address)
+    const swapBurnerInitialETHBalance = await ethers.provider.getBalance(this.swapBurner.address)
+    await this.swapBurner.connect(this.alice).swapAndBurn()
+    const finalSwapBurnerUBIBalance = await this.UBI.balanceOf(this.swapBurner.address)
     const expectedFinalUBISupply = 1000000000000 - 200 / mockSwapFactor
     const finalTotalUBISupply = await this.UBI.totalSupply()
-    const aliceFinalETHBalance = await ethers.provider.getBalance(this.alice.address)
+    const swapBurnerFinalETHBalance = await ethers.provider.getBalance(this.swapBurner.address)
     //THEN
-    expect(initialAliceUBIBalance).to.be.equal(0)
-    expect(finalAliceUBIBalance).to.be.equal(0)
+    expect(initialSwapBurnerUBIBalance).to.be.equal(0)
+    expect(finalSwapBurnerUBIBalance).to.be.equal(0)
     expect(initialTotalUBISupply).to.be.equal(1000000000000)
     expect(finalTotalUBISupply).to.be.equal(expectedFinalUBISupply)
-    expect(aliceFinalETHBalance).to.be.lt(aliceInitialETHBalance)
+    expect(swapBurnerFinalETHBalance).to.be.lte(swapBurnerInitialETHBalance)
   })
 
-  it('Should emit event when receiveSwapAndBurn', async () => {
+  it('Should emit event when swapAndBurn', async () => {
     //GIVEN
-    await this.swapBurner.approveUniSwap('1000000')
+    await this.swapBurner.approveUniSwap()
+    this.alice.sendTransaction({to: this.swapBurner.address, value: '200'})
     /**
      * REQUIRED TO MOCK CONTRACT WITH UBI TOKENS
      */
     await this.UBI.transfer(this.uniswapRouter.address, '1000')
     //WHEN THEN
-    await expect(
-      this.swapBurner.connect(this.alice).receiveSwapAndBurn({
-        value: '200'
-      })
-    )
+    await expect(this.swapBurner.connect(this.alice).swapAndBurn())
       .to.emit(this.swapBurner, 'SwapAndBurn')
       .withArgs(this.alice.address, 200, 100)
   })

@@ -1,49 +1,56 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "./interfaces/ISignatureMintERC721.sol";
 
 /// @title Canis NFT contract
 /// @author Think and Dev
-contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl {
+contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlEnumerable {
+    using ECDSA for bytes32;
+    using Counters for Counters.Counter;
+
     /// @dev Max amount of NFTs to be minted
     uint256 public immutable CAP;
     /// @dev ContractUri
     string public contractUri;
+    /// @dev Primary Sale Price
+    uint256 public primarySalePrice;
+    /// @dev Primary Sale Receiver Address
+    address payable public primarySaleReceiverAddress;
 
     /// @dev Private counter to make internal security checks
-    using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
     /**
      * @dev Minter rol
      */
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-
-    using ECDSA for bytes32;
-
     bytes32 private constant TYPEHASH = keccak256("MintRequest(address to,string uri,uint256 tokenId)");
 
     mapping(uint256 => bool) private availableToMint;
 
     event Initialized(
+        address owner,
+        address minter,
         uint256 cap,
         string name,
         string symbol,
         address defaultRoyaltyReceiver,
         uint96 defaultFeeNumerator,
-        string contractUri
+        string contractUri,
+        uint256 primarySalePrice,
+        address primarySaleReceiverAddress
     );
     event DefaultRoyaltyUpdated(address indexed royaltyReceiver, uint96 feeNumerator);
     event Claimed(address indexed to, uint256 tokenId);
     event ContractURIUpdated(string indexed contractUri);
+    event PrimarySaleUpdated(address receiver, uint256 price);
 
     /// @notice Init contract
     /// @param cap_ Max amount of NFTs to be minted. Cannot change
@@ -52,21 +59,34 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     /// @param defaultRoyaltyReceiver NFT Royalties receiver for all the collection
     /// @param defaultFeeNumerator Fees to be charged for royalties
     /// @param _contractUri Contract Uri
+    /// @param _primarySalePrice Primary Sale Price
+    /// @param _primarySaleReceiverAddress Primary Sale Receiver Address
     constructor(
+        address owner,
+        address minter,
         uint256 cap_,
         string memory name,
         string memory symbol,
         address defaultRoyaltyReceiver,
         uint96 defaultFeeNumerator,
-        string memory _contractUri
+        string memory _contractUri,
+        uint256 _primarySalePrice,
+        address _primarySaleReceiverAddress
     ) ERC721(name, symbol) {
+        require(owner != address(0), "NFTCapped: owner is 0");
+        require(minter != address(0), "NFTCapped: minter is 0");
         require(cap_ > 0, "NFTCapped: cap is 0");
+        require(_primarySalePrice > 0, "NFTCapped: primarySalePrice is 0");
+        require(_primarySaleReceiverAddress != address(0), "NFTCapped: primarySaleReceiverAddress is 0");
         CAP = cap_;
         contractUri = _contractUri;
+        primarySalePrice = _primarySalePrice;
+        primarySaleReceiverAddress = payable(_primarySaleReceiverAddress);
         super._setDefaultRoyalty(defaultRoyaltyReceiver, defaultFeeNumerator);
-        super._setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        super._setupRole(MINTER_ROLE, _msgSender());
-        emit Initialized(CAP, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri);
+        super._setupRole(DEFAULT_ADMIN_ROLE, owner);
+        super._setupRole(MINTER_ROLE, owner);
+        super._setupRole(MINTER_ROLE, minter);
+        emit Initialized(owner, minter, CAP, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri, _primarySalePrice, _primarySaleReceiverAddress);
     }
 
     /********** GETTERS ***********/
@@ -91,12 +111,24 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         emit DefaultRoyaltyUpdated(receiver, feeNumerator);
     }
 
+    /// @notice Primary sale config
+    /// @dev Set receiver and price to be charged
+    /// @param receiver Primary sale beneficiary
+    /// @param price Primary sale price
+    function setPrimarySaleReceiverAddress(address receiver, uint256 price) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(receiver != address(0), "NFTCapped: primarySaleReceiverAddress is 0");
+        require(price > 0, "NFTCapped: primarySalePrice is 0");
+        primarySaleReceiverAddress = payable(receiver);
+        primarySalePrice = price;
+        emit PrimarySaleUpdated(receiver, price);
+    }
+
 
     /********** INTERFACE ***********/
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721, ERC721Enumerable, ERC2981, AccessControl) returns (bool) {
+    ) public view override(ERC721, ERC721Enumerable, ERC2981, AccessControlEnumerable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -147,7 +179,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
 
     /// @notice Lazy Mint NFTs
     /// @return id of the next NFT to be minted
-    function safeLazyMint() external onlyRole(MINTER_ROLE) returns (uint256) {
+    function safeLazyMint() external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         _tokenIdCounter.increment();
         uint256 currentTokenId = _tokenIdCounter.current();
         require(currentTokenId <= CAP, "NFTCAPPED: cap exceeded");
@@ -158,8 +190,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     /// @notice Laxy Batch Mint NFTs
     /// @param quantity amount of NFTs to be minted
     /// @return id of the next NFT to be minted
-    function safeLazyMintBatch(uint256 quantity) external onlyRole(MINTER_ROLE) returns (uint256) {
-        require(quantity <= CAP, "NFTCAPPED: cap exceeded");
+    function safeLazyMintBatch(uint256 quantity) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
         uint256 currentTokenId = _tokenIdCounter.current();
         require(currentTokenId + quantity <= CAP, "NFTCAPPED: cap exceeded");
         for (uint256 i = 0; i < quantity; i++) {
@@ -185,6 +216,9 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         ISignatureMintERC721.MintRequest calldata request,
         bytes calldata signature
     ) public payable returns (uint256) {
+        require(msg.value >= primarySalePrice, "CANISNFT: Payment is less than primarySalePrice");
+        (bool sent, ) = primarySaleReceiverAddress.call{value: msg.value}("");
+        require(sent, "CANISNFT: Failed to send payment");
         //validate request
         _processRequest(request, signature);
         //mint nft
@@ -201,6 +235,14 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
     function verify(
         ISignatureMintERC721.MintRequest calldata _req,
         bytes calldata _signature
+    ) public view returns (address signer) {
+        return _verify(_req, _signature);
+    }
+
+    /// @dev Verifies that a mint request is signed by an authorized account.
+    function _verify(
+        ISignatureMintERC721.MintRequest calldata _req,
+        bytes calldata _signature
     ) internal view returns (address signer) {
         signer = _recoverAddress(_req, _signature);
         require(availableToMint[_req.tokenId], "CANISNFT: tokenId not available");
@@ -213,7 +255,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControl 
         bytes calldata _signature
     ) internal view returns (address signer) {
         //validate signer
-        signer = verify(_req, _signature);
+        signer = _verify(_req, _signature);
 
         require(_req.to != address(0), "CANISNFT: recipient undefined");
         require(_req.tokenId <= CAP, "CANISNFT: cap exceeded");

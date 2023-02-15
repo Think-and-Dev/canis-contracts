@@ -3,8 +3,9 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "../interfaces/IUniswapV2.sol";
 
-contract MockUniswapRouter is Ownable {
+contract MockUniswapRouter is IUniswapV2, Ownable {
     using SafeERC20 for IERC20;
     address private WETHToken;
     address public UBIToken;
@@ -30,21 +31,23 @@ contract MockUniswapRouter is Ownable {
     }
 
     // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
-    function getAmountsOut(uint256 amountIn, address[] memory path) public returns (uint256[] memory amounts) {
+    function getAmountsOut(uint256 amountIn, address[] memory path) public view returns (uint256[] memory amounts) {
         amounts = new uint256[](path.length);
         amounts[0] = amountIn;
-        amounts[1] = 0;
+        amounts[1] = amountIn / mulFactor;
     }
 
-    function swapETHForExactTokens(
-        uint256 amountOut,
+    function swapExactETHForTokens(
+        uint256 amountOutMin,
         address[] calldata path,
-        address to,
+        address,
         uint256 deadline
     ) external payable returns (uint256[] memory amounts) {
         require(IERC20(UBIToken).balanceOf(address(this)) > 0, "NO MORE UBIS LEFT TO GIVE");
-        IERC20(UBIToken).transfer(msg.sender, amountOut / mulFactor);
-        (bool sent, ) = payable(msg.sender).call{value: (msg.value) - 10}("");
-        require(sent, "Failed to send Native currency dust");
+        require(deadline >= block.timestamp, "DEADLINE EXPIRED");
+        uint256 amountOut = msg.value / mulFactor;
+        require(amountOut >= amountOutMin, "NOT ENOUGH AMOUNT OUT");
+        IERC20(UBIToken).transfer(msg.sender, amountOut);
+        amounts = new uint256[](path.length);
     }
 }
