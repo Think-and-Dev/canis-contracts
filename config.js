@@ -29,7 +29,7 @@ const config = {
       symbol: 'CANIS',
       defaultFeeNumerator: 1000, //10%
       contractUri: '',
-      primarySalePrice: '1250000000000000000', //1,25 AVAX
+      primarySalePrice: '15000000000000000000', //15 AVAX
       primarySaleReceiverAddress: '0x07e28B3350bC6a0D421Bf5F6308a399F4c99Ce88',
       assetToMint: 333
     },
