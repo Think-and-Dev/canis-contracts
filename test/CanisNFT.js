@@ -44,6 +44,7 @@ describe('Canis NFT', function () {
     const expectedPrimarySaleReceiverAddress = this.config.primarySaleReceiverAddress
 
     //WHEN
+    const owner = await this.canisNFT.owner()
     const name = await this.canisNFT.name()
     const symbol = await this.canisNFT.symbol()
     const cap = await this.canisNFT.CAP()
@@ -54,6 +55,7 @@ describe('Canis NFT', function () {
     const minterRole = await this.canisNFT.MINTER_ROLE()
 
     //THEN
+    expect(owner).to.be.equal(this.owner.address)
     expect(name).to.be.equal(expectedName)
     expect(symbol).to.be.equal(expectedSymbol)
     expect(cap).to.be.equal(expectedCap)
