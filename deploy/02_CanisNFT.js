@@ -39,7 +39,6 @@ module.exports = async (hardhat) => {
 
   cyan(`\nDeploying ${contractName}...`)
   const CanisNFTResult = await deploy(contractName, {
-    deterministicDeployment: ethers.utils.keccak256(ethers.utils.toUtf8Bytes(process.env.SALT)),
     args: constructorArguments,
     contract: contractName,
     from: deployer
