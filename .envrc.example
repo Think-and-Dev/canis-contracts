@@ -16,6 +16,3 @@ export FORK_BLOCK_NUMBER=''
 
 # Used to deploy
 export PRIVATE_KEY=''
-
-# Used to deploy
-export SALT=''
