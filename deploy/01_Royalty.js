@@ -14,11 +14,14 @@ module.exports = async (hardhat) => {
 
   const defaultUbiReceiver = ubiReceiver ? ubiReceiver : (await ethers.getContract('SwapBurner')).address
 
-  const constructorArguments = [
-    [royaltyReceiver, defaultUbiReceiver],
-    [percentageReceiver, percentageUBI]
-  ]
-
+  const constructorArguments = ((percentageReceiver == 100) && (percentageUBI == 0))
+    ? [
+      [royaltyReceiver],
+      [percentageReceiver]
+    ] : [
+      [royaltyReceiver, defaultUbiReceiver],
+      [percentageReceiver, percentageUBI]
+    ]
   const isTestEnvironment = chainId === 31337 || chainId === 1337
 
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
