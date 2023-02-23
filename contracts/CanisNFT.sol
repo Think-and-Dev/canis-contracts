@@ -23,7 +23,8 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlE
     uint256 public primarySalePrice;
     /// @dev Primary Sale Receiver Address
     address payable public primarySaleReceiverAddress;
-
+    /// @dev Address of owner
+    address private _owner;
     /// @dev Private counter to make internal security checks
     Counters.Counter private _tokenIdCounter;
 
@@ -78,15 +79,16 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlE
         require(cap_ > 0, "NFTCapped: cap is 0");
         require(_primarySalePrice > 0, "NFTCapped: primarySalePrice is 0");
         require(_primarySaleReceiverAddress != address(0), "NFTCapped: primarySaleReceiverAddress is 0");
+        _owner = owner;
         CAP = cap_;
         contractUri = _contractUri;
         primarySalePrice = _primarySalePrice;
         primarySaleReceiverAddress = payable(_primarySaleReceiverAddress);
         super._setDefaultRoyalty(defaultRoyaltyReceiver, defaultFeeNumerator);
-        super._setupRole(DEFAULT_ADMIN_ROLE, owner);
-        super._setupRole(MINTER_ROLE, owner);
+        super._setupRole(DEFAULT_ADMIN_ROLE, _owner);
+        super._setupRole(MINTER_ROLE, _owner);
         super._setupRole(MINTER_ROLE, minter);
-        emit Initialized(owner, minter, CAP, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri, _primarySalePrice, _primarySaleReceiverAddress);
+        emit Initialized(_owner, minter, CAP, name, symbol, defaultRoyaltyReceiver, defaultFeeNumerator, contractUri, _primarySalePrice, _primarySaleReceiverAddress);
     }
 
     /********** GETTERS ***********/
@@ -121,6 +123,13 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlE
         primarySaleReceiverAddress = payable(receiver);
         primarySalePrice = price;
         emit PrimarySaleUpdated(receiver, price);
+    }
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view virtual returns (address) {
+        return _owner;
     }
 
 
@@ -179,7 +188,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlE
 
     /// @notice Lazy Mint NFTs
     /// @return id of the next NFT to be minted
-    function safeLazyMint() external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+    function safeLazyMint() external onlyRole(MINTER_ROLE) returns (uint256) {
         _tokenIdCounter.increment();
         uint256 currentTokenId = _tokenIdCounter.current();
         require(currentTokenId <= CAP, "NFTCAPPED: cap exceeded");
@@ -190,7 +199,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlE
     /// @notice Laxy Batch Mint NFTs
     /// @param quantity amount of NFTs to be minted
     /// @return id of the next NFT to be minted
-    function safeLazyMintBatch(uint256 quantity) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+    function safeLazyMintBatch(uint256 quantity) external onlyRole(MINTER_ROLE) returns (uint256) {
         uint256 currentTokenId = _tokenIdCounter.current();
         require(currentTokenId + quantity <= CAP, "NFTCAPPED: cap exceeded");
         for (uint256 i = 0; i < quantity; i++) {
