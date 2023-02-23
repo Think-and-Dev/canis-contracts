@@ -13,9 +13,10 @@ module.exports = async (hardhat) => {
 
   const defaultRoyaltyReceiver = (await ethers.getContract('Royalty', this.deployer)).address
 
-  const {minter, cap, name, symbol, defaultFeeNumerator, contractUri, primarySalePrice, primarySaleReceiverAddress} =
+  const {owner, minter, cap, name, symbol, defaultFeeNumerator, contractUri, primarySalePrice, primarySaleReceiverAddress} =
     config[contractName][chainId]
-
+  
+  const defaultOwner = owner ? owner : deployer
   const isTestEnvironment = chainId === 31337 || chainId === 1337
 
   dim('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -25,7 +26,7 @@ module.exports = async (hardhat) => {
   dim(`network: ${chainName(chainId)} (${isTestEnvironment ? 'local' : 'remote'})`)
   dim(`deployer: ${deployer}`)
   const constructorArguments = [
-    deployer,
+    defaultOwner,
     minter,
     cap,
     name,
