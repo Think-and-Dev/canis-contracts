@@ -188,7 +188,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlE
 
     /// @notice Lazy Mint NFTs
     /// @return id of the next NFT to be minted
-    function safeLazyMint() external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+    function safeLazyMint() external onlyRole(MINTER_ROLE) returns (uint256) {
         _tokenIdCounter.increment();
         uint256 currentTokenId = _tokenIdCounter.current();
         require(currentTokenId <= CAP, "NFTCAPPED: cap exceeded");
@@ -199,7 +199,7 @@ contract CanisNFT is ERC721URIStorage, ERC721Enumerable, ERC2981, AccessControlE
     /// @notice Laxy Batch Mint NFTs
     /// @param quantity amount of NFTs to be minted
     /// @return id of the next NFT to be minted
-    function safeLazyMintBatch(uint256 quantity) external onlyRole(DEFAULT_ADMIN_ROLE) returns (uint256) {
+    function safeLazyMintBatch(uint256 quantity) external onlyRole(MINTER_ROLE) returns (uint256) {
         uint256 currentTokenId = _tokenIdCounter.current();
         require(currentTokenId + quantity <= CAP, "NFTCAPPED: cap exceeded");
         for (uint256 i = 0; i < quantity; i++) {
