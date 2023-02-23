@@ -1,18 +1,20 @@
 const config = {
   CanisNFT: {
     1: {
-      minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
+      owner: '0x07e28B3350bC6a0D421Bf5F6308a399F4c99Ce88',// if empty it will use the deployer address
+      minter: '0xE91Bb83Eb7Fe28E49fB49A8696409d08132405cB',
       cap: 11111,
       name: 'CanisNFT',
       symbol: 'CANIS',
       defaultFeeNumerator: 1000, //10%
-      contractUri: '',
+      contractUri: 'ipfs://bafybeihdkldxf6akp2e44bdb5dcof653vpjebvb3igk6holzx5ufnuvdzq/contract-level.json',
       primarySalePrice: '150000000000000000', //0,15 ETH
       primarySaleReceiverAddress: '0x07e28B3350bC6a0D421Bf5F6308a399F4c99Ce88',
       assetToMint: 778
     },
     5: {
-      minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
+      owner:'0x07e28B3350bC6a0D421Bf5F6308a399F4c99Ce88', // if empty it will use the deployer address
+      minter: '0xE91Bb83Eb7Fe28E49fB49A8696409d08132405cB',
       cap: 11111,
       name: 'CanisNFT',
       symbol: 'CANIS',
@@ -23,18 +25,20 @@ const config = {
       assetToMint: 778
     },
     43114: {
-      minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
+      owner:'0x07e28B3350bC6a0D421Bf5F6308a399F4c99Ce88', // if empty it will use the deployer address
+      minter: '0xE91Bb83Eb7Fe28E49fB49A8696409d08132405cB',
       cap: 11111,
       name: 'CanisNFT',
       symbol: 'CANIS',
       defaultFeeNumerator: 1000, //10%
-      contractUri: '',
+      contractUri: 'ipfs://bafybeig7bbhddykavlpihbnzdqr777l5y4x2ppqnygcyzxxzfb6cdjztim/contract-level.json',
       primarySalePrice: '15000000000000000000', //15 AVAX
       primarySaleReceiverAddress: '0x07e28B3350bC6a0D421Bf5F6308a399F4c99Ce88',
       assetToMint: 333
     },
     43113: {
-      minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
+      owner:'0x07e28B3350bC6a0D421Bf5F6308a399F4c99Ce88', // if empty it will use the deployer address
+      minter: '0xE91Bb83Eb7Fe28E49fB49A8696409d08132405cB',
       cap: 11111,
       name: 'CanisNFT',
       symbol: 'CANIS',
@@ -45,6 +49,7 @@ const config = {
       assetToMint: 333
     },
     31337: {
+      owner:'', // if empty it will use the deployer address
       minter: '0x27598400A96D4EE85f86b0931e49cBc02adD6dF0',
       cap: 10, //to some test modify to 11111
       name: 'CanisNFT',
@@ -71,15 +76,15 @@ const config = {
     },
     43114: {
       royaltyReceiver: '0x0d42274878ca5f07B0420bBeBB56C3A66b83D63F',
-      percentageReceiver: 50,
+      percentageReceiver: 100,
       ubiReceiver: '0x48Ef3BDB04a636dafa080A4F96347D1A35Bfbf4e',
-      percentageUBI: 50
+      percentageUBI: 0
     },
     43113: {
       royaltyReceiver: '0x0d42274878ca5f07B0420bBeBB56C3A66b83D63F',
-      percentageReceiver: 50,
+      percentageReceiver: 100,
       ubiReceiver: '0x48Ef3BDB04a636dafa080A4F96347D1A35Bfbf4e',
-      percentageUBI: 50
+      percentageUBI: 0
     },
     31337: {
       royaltyReceiver: '0x48Ef3BDB04a636dafa080A4F96347D1A35Bfbf4e',
@@ -90,7 +95,7 @@ const config = {
   },
   SwapBurner: {
     1: {
-      uniswapRouter: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+      uniswapRouter: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', //uniswap v2
       ubiToken: '0xdd1ad9a21ce722c151a836373babe42c868ce9a4'
     },
     5: {
