@@ -45,7 +45,7 @@ if (process.env.HDWALLET_MNEMONIC || process.env.PRIVATE_KEY) {
     live: true
   }
 
-  networks.avalache = {
+  networks.avalanche = {
     chainId: 43114,
     url: 'https://api.avax.network/ext/bc/C/rpc',
     accounts,
